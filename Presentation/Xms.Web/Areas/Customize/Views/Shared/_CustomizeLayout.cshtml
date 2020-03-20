@@ -1,0 +1,1072 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <meta name="description" content="xms">
+    <meta name="author" content="xms">
+    <link rel="icon" href="/favicon.ico">
+
+    <title>@app.PageTitle</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/content/css/bootstrap3.3.5/bootstrap.min.css?v=@app.PlatformSettings.VersionNumber" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="/content/customize/css/dashboard.css?v=@app.PlatformSettings.VersionNumber" rel="stylesheet">
+    <link href="/content/css/ace.min.css?v=@app.PlatformSettings.VersionNumber" rel="stylesheet">
+    <link href="/content/css/font-awesome.min.css?v=@app.PlatformSettings.VersionNumber" rel="stylesheet">
+    <link href="/content/css/iconfon.css?v=@app.PlatformSettings.VersionNumber" rel="stylesheet">
+    <link href="/content/customize/css/common.css?v=@app.PlatformSettings.VersionNumber" rel="stylesheet">
+    <link id="themeLink" href="~/content/css/theme/@(app.Theme).css" rel="stylesheet" />
+    <link href="/content/customize/layui/css/layui.css?v=@app.PlatformSettings.VersionNumber" rel="stylesheet" />
+    @{await Html.RenderPartialAsync("UserContext"); }
+    <!-- Bootstrap core JavaScript ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="/content/js/jquery.min.js?v=@app.PlatformSettings.VersionNumber"></script>
+    <script src="/content/js/bootstrap.min.js?v=@app.PlatformSettings.VersionNumber"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="/content/js/ie10-viewport-bug-workaround.js?v=@app.PlatformSettings.VersionNumber"></script>
+    <script src="/content/js/jquery.bootstrap.min.js?v=@app.PlatformSettings.VersionNumber"></script>
+    <script src="/content/js/json2.js?v=@app.PlatformSettings.VersionNumber"></script>
+    <script src="/content/js/jquery-toast/jquery.toast.min.js?v=@app.PlatformSettings.VersionNumber"></script>
+    <script src="/content/js/xms.utility.js?v=@app.PlatformSettings.VersionNumber"></script>
+    <script src="/content/js/xms.jquery.js?v=@app.PlatformSettings.VersionNumber"></script>
+    <script src="/content/js/xms.web.js?v=@app.PlatformSettings.VersionNumber"></script>
+    <script src="/content/js/jquery-ui-1.10.3/ui/jquery.ui.core.js?v=@app.PlatformSettings.VersionNumber"></script>
+    <script src="/content/js/jquery-ui-1.10.3/ui/jquery.ui.widget.js?v=@app.PlatformSettings.VersionNumber"></script>
+    <script src="/content/js/jquery-ui-1.10.3/ui/jquery.ui.mouse.js?v=@app.PlatformSettings.VersionNumber"></script>
+    <script src="/content/js/jquery-ui-1.10.3/ui/jquery.ui.draggable.js?v=@app.PlatformSettings.VersionNumber"></script>
+
+    <script>
+        jQuery(function () {
+            Xms.Web.Loading();
+        });
+    </script>
+    @{await Html.RenderPartialAsync("CommonLabel"); }
+    @if (IsSectionDefined("Header"))
+    {
+        @RenderSection("Header")
+    }
+    <style>
+        body {
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body data-spy="scroll" class="customize-body" data-target="#myScrollspy">
+    @*@{await Html.RenderPartialAsync("navbar");}*@
+    <nav class="navbar navbar-inverse navbar-fixed-top customize-navbar-top">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="navbar-header col-sm-3 col-md-2 custom-header-title">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand navbar-link" href="@("/"+app.OrganizationUniqueName)/home/index" style="white-space: nowrap;font-size:16px; display:inline-block; text-align:center; text-overflow:ellipsis; overflow:hidden; width:100%;"><strong>@app.PlatformSettings.AppName</strong> <span class="glyphicon glyphicon-cloud"></span></a>
+                </div>
+                <div id="navbar" class="navbar-collapse collapse col-md-10 col-sm-9 custom-header-tools " style="width:inherit">
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <a href="javascript:;" id="xms-sideBarbtn" title="侧边伸缩">
+                                <i class="layui-icon layui-icon-shrink-right left-menus-ctrl pull-left"></i>
+                            </a>
+                        </li>
+
+                        <li>
+                            <div id="nav-search-dropdown" class="dropdown pl-2 pt-1">
+                                <input type="text" placeholder="实体搜索..." autocomplete="off" class="layui-input layui-input-search" id="nav-search-input" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <ul id="nav-search-tips" class="dropdown-menu" aria-labelledby="nav-search-input">
+                                    <li class="nav-search-tips-item"><a href="javascript:;">请输入关键字...</a></li>
+                                </ul>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <ul class="nav navbar-nav navbar-pill  pull-right top-navber-tool">
+                        <li><a href="@("/"+app.OrganizationUniqueName)/home/index" title="@app.T["homepage"]" target="_blank"><i class="layui-icon layui-icon-website"></i></a></li>
+
+                        <li><a href="@("/"+app.OrganizationUniqueName)/account/signout" title="@app.T["signout"]"><i class="glyphicon glyphicon-log-out"></i></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <div class="container-fluid body" id="">
+        <div class="row">
+            <div class="col-sm-3 col-md-2 sidebar" id="sidebar" style="padding:0px">
+
+                <ul class="nav nav-sidebar nav-list">
+                    <li class="nav-header text-primary dropdown" style="padding-left:5px;cursor:pointer;">
+                        <h5 id="solutionsSel" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true"><span class="glyphicon glyphicon-briefcase"></span> <strong>@app.T["solution"] - @ViewBag.SolutionName</strong><span class="glyphicon glyphicon-triangle-bottom pull-right" style="padding-right:5px;"></span></h5>
+                        <ul class="dropdown-menu" aria-labelledby="solutionsSel" id="solutionsSelList" data-id="@ViewBag.SolutionId"></ul>
+                    </li>
+                </ul>
+                @*<div class="cramb-wrap" style="position:relative;">
+                        <div id="customize_nav_cramb" class="customize_nav_cramb"></div>
+                        <span class="glyphicon glyphicon-triangle-bottom toggleNavList active" id="toggleNavList" style="position:absolute; right:5px; top:8px; display:none;"></span>
+                    </div>*@
+                @*<div id="customize_nav" class="customize_nav active"></div>
+                    <div id="customize_other_cramb" class="customize_nav_cramb"></div>
+                    <div id="customize_other"></div>*@
+                <div class="pt-1 pl-1 pr-1 pb-4">
+                    <div id="navTree" data-url="@("/"+app.OrganizationUniqueName)/api/schema/entitytree?solutionid=@ViewBag.SolutionId"></div>
+                </div>
+            </div>
+            <div class="col-sm-9 col-md-10 col-sm-offset-3 col-md-offset-2  main-container" id="main">
+                <div class="pl-5 pr-5 position-relative tag-container" style="padding-left:84px;">
+                    <div class="tab-nav-ctrl btn btn-sm tab-nav-leftctrl"><i class="glyphicon glyphicon-chevron-left"></i></div>
+                    <div class="tab-nav-ctrl btn btn-sm tab-nav-refreshctrl"><i class="glyphicon glyphicon-repeat"></i></div>
+                    <div class="tab-nav-ctrl btn btn-sm tab-nav-deletectrl" style="left:54px;" title="关闭所有标签页"><i class="glyphicon glyphicon-remove"></i></div>
+                    <div class="tab-nav-ctrl btn btn-sm tab-nav-rightctrl"><i class="glyphicon glyphicon-chevron-right"></i></div>
+                    <div class="custom-tab-nav btn-group" id="customTabNav"></div>
+                </div>
+                <div class="custom-tab-nav-content" id="customTabNavIframes"></div>
+
+                <div id="navPath" class="clearfix hide" style="margin-left: -15px; margin-right: -15px;">
+
+                    <ol class="breadcrumb">
+                        <li>&rsaquo;&rsaquo;</li>
+                        @foreach (var item in app.PrivilegeTree)
+                        {
+                            var url = item.Url.IsEmpty() ? "javascript:;" : item.Url;
+                            @:
+                            <li><a href="@url">@item.DisplayName</a></li>
+                        }
+                        <li class="pull-right">
+                            <a href="@app.UrlReferrer"><span class="glyphicon glyphicon-arrow-left"></span>@app.T["goback"]</a>
+                        </li>
+                    </ol>
+                </div>
+                <div id="content" class="" style="">
+                    @RenderBody()
+                    @*<iframe name="bodyframe" id="bodyframe" frameborder="0" src="@("/"+app.OrganizationUniqueName)/customize/solution/components?solutionid=@ViewBag.SolutionId" onload="iFrameHeight();" width="100%" height="500px"></iframe>*@
+                </div>
+                <nav class="navbar navbar-default navbar-fixed-bottom col-sm-offset-3 col-md-offset-2 hide" role="navigation" id="body-footer">
+                    <div class="container">
+                        <div class="navbar-form navbar-left" id="body-footer-content">
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </div>
+    <link href="/content/css/jqtree.css?v=@app.PlatformSettings.VersionNumber" rel="stylesheet">
+    <script src="/content/js/common/userpagesetting.js?v=@app.PlatformSettings.VersionNumber"></script>
+    <script src="/content/js/tree.jquery.js?v=@app.PlatformSettings.VersionNumber"></script>
+    <script src="/content/js/jquery.cookie.js?v=@app.PlatformSettings.VersionNumber"></script>
+    <script src="/content/js/xms-history.js?v=@app.PlatformSettings.VersionNumber"></script>
+    <script>
+
+        var entitytree_url = '@("/"+app.OrganizationUniqueName)/api/schema/entitytree?solutionid=@ViewBag.SolutionId';
+        var page_solutionid = '@ViewBag.SolutionId';
+        function getPageSolutionId() {
+            return page_solutionid;
+        }
+
+        function resetResultLast(data,layer) {
+            if (!data || !data.length) return [];
+            layer = layer || 0;
+            layer++;
+            for (var i = 0, len = data.length; i < len; i++) {
+
+                var item = data[i];
+                //if (item.children) {
+
+               // }
+                 item.layer = layer;
+                if (item.children) {
+
+                    resetResultLast(item.children,layer);
+                    item.link = item.id;
+                    $.each(item.children, function (ii,nn) {
+                        nn._parentid = item.id;
+                        nn._parentname = item.label;
+                    });
+                } else {
+                    item.link = item.id;
+                    item.id = item.id +"-"+ item.type;
+                }
+            }
+        }
+        function iFrameHeight() {
+            var ifm = document.getElementById("bodyframe");
+            var subWeb = document.frames ? document.frames["bodyframe"].document : ifm.contentDocument;
+            var navbarH = $('#navbar').height();
+            if (ifm != null && subWeb != null) {
+                ifm.height = $(window).height()-navbarH;//subWeb.body.scrollHeight;
+            }
+        }
+
+        function runChildrenIframeFunc(func) {
+            if (func && typeof func === "function") {
+                func();
+            }
+        }
+        function xms_navGetAllDatas() {
+            return treeDatas
+        }
+        var solutionid = '@ViewBag.SolutionId';
+        var treeDatas = [];
+        $(function () {
+            if (top.location != location) {
+                top.location.href = location.href;
+            }
+          //  xms_nav.init();
+
+               customizeNav.initTree();
+           customizeNav.openNode('component');
+            Xms.Web.Event.subscribe('refreshtree', function (e) {
+                console.log('refreshtree...');
+                customizeNav.$tree.tree('reload');
+                customizeNav.openNode('entities');
+               // xms_nav.init();
+            });
+            $('#nav-search-input').on('keyup', function () {
+                var val = $(this).val();
+                if (val == '') {
+                    $('#nav-search-tips').empty();
+                    return false;
+                }
+                var parentid = $(this).attr('data-parentid');
+                var res = getDatasByName(treeDatas, val);
+                console.log(treeDatas)
+                if (res && res.length > 0) {
+                    $('#nav-search-tips').empty();
+                    $.each(res,function (i,n) {
+                        $('#nav-search-tips').append('<li class="nav-search-item" data-id="' + n.id + '" data-parentid="' + n._parentid + '"><a href="javascript:;">' + n.label +(n._parentname?' ('+ n._parentname+' )':'') + '</a></li>');
+                    });
+                }
+            });
+            $('#toggleNavList').on('click', function (e) {
+                var $this = $(this);
+                var $customize_nav = $('#customize_nav');
+                if (!$customize_nav.hasClass('active')) {
+                    $this.addClass('active');
+                    $customize_nav.addClass('active');
+                } else {
+                    $this.removeClass('active');
+                    $customize_nav.removeClass('active');
+                }
+            })
+            $('#nav-search-tips').on('click', '.nav-search-item', function () {
+                var parentid = $(this).attr('data-parentid');
+                var id = $(this).attr('data-id');
+                $('#toggleNavList').addClass('active');
+                $('#customize_nav').addClass('active');
+                customizeNav.openNode(id);
+                  //  xms_nav.openLeaf(id);
+
+            });
+
+             $.moHistory.run();//运行路由
+            getSolutions();
+
+            $('#xms-sideBarbtn').on('click', function () {
+                var $sidebar = $('#sidebar');
+                if ($sidebar.hasClass('active')) {
+                   changeLeftWrapState('open')
+                } else {
+                   changeLeftWrapState('close')
+                }
+            })
+
+            $('#customTabNav').iframeLinks({
+                iframeContext: $('#customTabNavIframes'),
+                offsetH: -77,
+                leftCtrl: $('.tab-nav-leftctrl'),
+                rightCtrl: $('.tab-nav-rightctrl'),
+                $refresh: $('.tab-nav-refreshctrl'),
+                $delete: $('.tab-nav-deletectrl'),
+                rightTopIconHandle: function (e, link,self) {
+                    addToChildQuickLink(link);
+                },
+                linkItemHandler: function (link, id) {
+                  //  xms_nav.openLeaf(id);
+                    customizeNav.openNode(id);
+                }, checkHandler: function () {
+                    if (typeof XmsUserSetting != 'undefined') {
+                        var tabnavinfos = {
+                            index: this.activeIndex,
+                            list: this.list,
+                        }
+                        XmsUserSetting.addSetting('customizehome', tabnavinfos,null,true);
+                        XmsUserSetting.addToLocalStorage();
+                        console.log(XmsUserSetting);
+                        console.log(XmsUserSetting.getByLocalStorage())
+                    }
+                }
+            });
+
+            loadUserSetting();
+            $('#customTabNav').iframeLinks('addLink', { id: 'homepage', name: '', icon: 'glyphicon glyphicon-home', notremove: true, src: '/customize/home/homepage' });
+        });
+
+        function changeLeftWrapState(state) {
+            state = state || 'close';
+            if (state == 'close') {
+                $('#sidebar').addClass('active');
+                $('#main').addClass('active');
+                $('.custom-header-title').addClass('active');
+                $('#navbar').removeClass('active');
+                $('#xms-sideBarbtn').children().removeClass('layui-icon-shrink-right').addClass('layui-icon-spread-left').text('');
+            } else {
+                 $('#sidebar').removeClass('active');
+                $('#main').removeClass('active');
+                $('.custom-header-title').removeClass('active');
+                $('#navbar').addClass('active');
+                $('#xms-sideBarbtn').children().removeClass('layui-icon-spread-left').addClass('layui-icon-shrink-right').text('');
+            }
+        }
+
+        function getDatasByName(_datas, name, res) {
+            res = res || [];
+            $.each(_datas, function (i, n) {
+                if (n.label && n.label != '' && n.label.toLowerCase().indexOf(name) != -1) {
+                    res.push(n);
+                }
+                if (n.children && n.children.length > 0) {
+                    self.getDatasByName(n.children, name, res);
+                }
+            });
+            return res;
+        }
+        function loadUserSetting() {
+            var res = false;
+            if (typeof XmsUserSetting != 'undefined') {
+                var datas = XmsUserSetting.getByLocalStorage();
+                if (datas && datas.length>0) {
+                    var pageinfos = XmsUserSetting.getDatasBykey('customizehome');
+                    if (pageinfos && pageinfos.length > 0) {
+                        var pageinfo = pageinfos[0];
+                        if (pageinfo.value && pageinfo.value.list && pageinfo.value.list.length>0) {
+                            $.each(pageinfo.value.list, function (i, n) {
+                                n.notLoad = true;
+                                $('#customTabNav').iframeLinks('addLink', n);
+
+                            });
+                            //pageinfo.value.index ||
+                            $('#customTabNav').iframeLinks('setIframeSrc', pageinfo.value.list[ 0]);
+                            res = true;
+                        }
+                    }
+                }
+            }
+            return res;
+        }
+
+        function addToChildQuickLink(datas) {
+            Xms.Web.callChildMethod('iframelink_homepage','addShortDataAndRender', datas);
+        }
+
+        function resetNavHeight() {
+            var $context = $('#customize_nav'), $cramb = $('#customize_nav_cramb'), $customize_other_cramb = $('#customize_other_cramb'), $customize_other = $('#customize_other');
+            var fixTop = 50, winSizeH = $(window).height(), offsetH = -100;
+            var crambheight = $customize_other_cramb.outerHeight() + $customize_other.outerHeight();
+            var maxheight = winSizeH - fixTop - crambheight + offsetH;
+            $context.css('max-height', maxheight);
+        }
+        function getTypeIconEl(type) {
+            var icon = getTypeIcon(type);
+            return icon.indexOf("layui-icon")!=-1?icon:'<i class="'+icon+'"></i>';
+        }
+        function getTypeIcon(type) {
+            var node = { type: type };
+            if (node.type == 'solution')
+                return "glyphicon glyphicon-info-sign";
+            else if (node.type == 'component')
+                return "glyphicon glyphicon-th-large";
+            else if (node.type == 'entity')
+                return "glyphicon glyphicon-book";
+            else if (node.type == 'view')
+                return 'glyphicon glyphicon-list-alt';
+            else if (node.type == 'form')
+                return 'layui-icon layui-icon-form';
+            else if (node.type == 'attribute')
+                return "glyphicon glyphicon-file";
+            else if (node.type == 'ribbonbutton')
+                return "glyphicon glyphicon-flash";
+            else if (node.type == 'duplicaterules')
+                return "glyphicon glyphicon-repeat";
+            else if (node.type == 'filterrules')
+                return "glyphicon glyphicon-alert";
+            else if (node.type == 'entitymap')
+                return "glyphicon glyphicon-transfer";
+            else if (node.type == 'onetomore')
+                return "glyphicon glyphicon-leaf";
+            else if (node.type == 'moretoone')
+                return "glyphicon glyphicon-leaf";
+            else if (node.type == 'moretomore')
+                return "glyphicon glyphicon-leaf";
+            else if (node.type == 'chart')
+                return "glyphicon glyphicon-stats";
+            else if (node.type == 'optionset')
+                return 'layui-icon layui-icon-tabs';
+            else if (node.type == 'fieldpermission')
+                return "glyphicon glyphicon-lock";
+            else if (node.type == 'dashboard')
+                return "glyphicon glyphicon-dashboard";
+            else if (node.type == 'report')
+                return  'layui-icon layui-icon-chart';
+            else if (node.type == 'webresource')
+                return "glyphicon glyphicon-globe";
+            else if (node.type == 'workflow')
+                return "glyphicon glyphicon-random";
+            else if (node.type == 'autonumber')
+                return "glyphicon glyphicon-font";
+            else if (node.type == 'plugin')
+                return "glyphicon glyphicon-inbox";
+            else if (node.type == 'labels')
+                return "glyphicon glyphicon-tags";
+            else if (node.type == 'glo_charts')
+                return "glyphicon glyphicon-stats";
+            else if (node.type == 'glo_duplicaterule')
+                return "glyphicon glyphicon-repeat";
+            else if (node.type == 'glo_entitymap')
+                return "glyphicon glyphicon-transfer";
+            else if (node.type == 'glo_filterrule')
+                return "glyphicon glyphicon-alert";
+            else
+                return "glyphicon glyphicon-folder-close";
+        }
+
+        function addToTab(node,_node) {
+            if (node.nodeType) {
+                node = _node;
+            }
+             $('#customTabNav').iframeLinks('addLink', { id: node.id, name: node.label, other:node.other, src: node.link });
+        }
+        function triggerLink(node, _node) {
+            if (node.nodeType) {
+                node = _node;
+            }
+             var type = node.type;
+                    // console.log(type, node);
+                    var hashlink = "/" + type+":"+node.link;
+            if (type == 'solution') {
+                customizeNav.load('/customize/solution/editsolution?id=' + solutionid, node);
+            }
+            else if (type == 'component') {
+                customizeNav.loadComponents(node);
+
+            }
+            else if (type == 'entity') {
+                customizeNav.load('/customize/entity/editentity?id=' + node.link, node);
+                if (!node) return false;
+                $('#customTabNav').iframeLinks('addLink', { id: node.id, name: node.label, other: node._parentname + '-', icon: getTypeIcon(node.type), src: '/customize/entity/editentity?id=' + node.link });
+            }
+            else if (type == 'form') {
+                customizeNav.loadForms(node.link, node);
+            }
+            else if (type == 'view') {
+                customizeNav.loadViews(node.link, node);
+            }
+            else if (type == 'attribute') {
+                customizeNav.loadAttributes(node.link, node);
+            }
+            else if (type == 'ribbonbutton') {
+                customizeNav.loadRibbonButtons(node.link, node);
+            }
+            else if (type == 'duplicaterules') {
+                customizeNav.loadDuplicateRules(node.link, node);
+            }
+            else if (type == 'entitymap') {
+                customizeNav.loadEntityMaps(node.link, node);
+            }
+            else if (type == 'onetomore') {
+                customizeNav.loadRelations(node.link, 1, node);
+            }
+            else if (type == 'moretoone') {
+                customizeNav.loadRelations(node.link, 2, node);
+            }
+            else if (type == 'moretomore') {
+                customizeNav.loadRelations(node.link, 3, node);
+            }
+            else if (type == 'filterrules') {
+                customizeNav.loadFilterRules(node.link, node);
+            }
+            else if (type == 'chart') {
+                customizeNav.loadCharts(node.link, node);
+            }
+            else if (type == 'optionset') {
+                customizeNav.loadOptionSets(node);
+            }
+            else if (type == 'fieldpermission') {
+                customizeNav.loadFieldPermissions(node);
+            }
+            else if (type == 'dashboard') {
+                customizeNav.loadDashboards(node);
+            }
+            else if (type == 'report') {
+                customizeNav.loadReports(node);
+            }
+            else if (type == 'webresource') {
+                customizeNav.loadWebResources(node);
+            }
+            else if (type == 'workflow') {
+                customizeNav.loadWorkflows(node);
+            }
+            else if (type == 'autonumber') {
+                customizeNav.loadAutoNumberRules(node);
+            }
+            else if (type == 'plugin') {
+                customizeNav.loadPlugins(node);
+            }
+            else if (type == 'labels') {
+                customizeNav.loadLabels(node);
+            }
+            else if (type == 'glo_charts') {
+                customizeNav.loadGloCharts(node);
+            }
+            else if (type == 'glo_duplicaterule') {
+                customizeNav.loadGloDuplicaterRule(node);
+            }
+            else if (type == 'glo_entitymap') {
+                customizeNav.loadGloEntityMap(node);
+            }
+            else if (type == 'glo_filterrule') {
+                customizeNav.loadGloFilterRule(node);
+            }
+            else {
+                customizeNav.loadEntities(node);
+            }
+                var hash = location.hash;
+                //clearHashLink();
+                location.hash = hashlink;
+        }
+
+        var customizeNav = {
+            $tree: $('#navTree'),
+            initTree: function () {
+                customizeNav.$tree.tree({
+                   // autoOpen:true,
+                    onCreateLi: function (node, $li) {
+                        if (node.id != '') {
+                            var icon = getTypeIcon(node.type);
+                            $li.find('.jqtree-title i').addClass(icon);
+                        }
+                    }
+                    , dataFilter: function (data) {
+                        var results = Xms.Web.GetAjaxResult(data).content;
+                        console.log('dataFilter',results);
+                        //results[0].label = "实体";
+                        for (var i = 0; i < results.length; i++) {
+                            results[i].type = 'group';
+                            results[i].label = ' ' + results[i].label;
+                            for (var j = 0; j < results[i].children.length; j++) {
+                                var _this = results[i].children[j];
+                                var id = _this.id;
+                                results[i].children[j].type = 'entity';
+                                results[i].children[j].label = ' ' + results[i].children[j].label;
+                                results[i].children[j].children = [
+                                      { id: id, label: ' ' + LOC_ATTRIBUTE, type: 'attribute' }
+                                    , { id: id, label: ' ' + LOC_FORM, type: 'form' }
+                                    , { id: id, label: ' ' + LOC_QUERYVIEW, type: 'view' }
+                                    , { id: id, label: ' ' + LOC_RIBBONBUTTON, type: 'ribbonbutton' }
+                                    , { id: id, label: ' 1:N ' + LOC_RELATIONSHIP, type: 'onetomore' }
+                                    , { id: id, label: ' N:1 ' + LOC_RELATIONSHIP, type: 'moretoone' }
+                                    , { id: id, label: ' ' + LOC_CHART, type: 'chart' }
+                                    , { id: id, label: ' ' + LOC_DUPLICATERULE, type: 'duplicaterules' }
+                                    , { id: id, label: ' ' + LOC_ENTITYMAP, type: 'entitymap' }
+                                    , { id: id, label: ' ' + LOC_FILTERRULE, type: 'filterrules' }
+                                   // , { id: id, label: ' ' + LOC_REPORT, type: 'report' }
+                                ];
+                            }
+                        }
+                        results.push({ id: 'optionset', label: ' ' + LOC_OPTIONSET, type: 'optionset' });
+                        results.push({ id: 'report', label: ' ' + LOC_REPORT, type: 'report' });
+                        results.push({ id: 'webresource', label: ' ' + LOC_WEBRESOURCE, type: 'webresource' });
+                        results.push({ id: 'workflow', label: ' ' + LOC_WORKFLOW, type: 'workflow' });
+                        results.push({ id: 'plugin', label: ' ' + LOC_PLUGIN, type: 'plugin' });
+                        results.push({ id: 'dashboard', label: ' ' + LOC_DASHBOARD, type: 'dashboard' });
+                        results.push({ id: 'glo_charts', label: ' ' + LOC_CHART, type: 'glo_charts' });
+                        results.push({ id: 'glo_entitymap', label: ' ' + LOC_ENTITYMAP, type: 'glo_entitymap' });
+                        results.push({ id: 'glo_filterrule', label: ' ' + LOC_FILTERRULE, type: 'glo_filterrule' });
+                        results.push({ id: 'autonumber', label: ' ' + LOC_SERIALNUMBERRULE, type: 'autonumber' });
+                       // results.push({ id: 'labels', label: ' ' + LOC_LOCALIZATIONLABEL, type: 'labels' });
+
+                        results.push({ id: 'glo_duplicaterule', label: ' ' + LOC_DUPLICATERULE, type: 'glo_duplicaterule' });
+                        var a = [];
+                        //a[0] = { id: 'solution', label: ' ' + LOC_INFORMATION, type: 'solution' };
+                        a[0] = { id: 'component', label: ' ' + LOC_COMPONENT, type: 'component' };
+                        resetResultLast(results);
+                        a[0].children = results;
+                        console.log('dataFilter', a);
+                        treeDatas = a;
+                        return a;
+                    }
+                    , selectable: true
+                    , saveState: 'admin-customize',
+                    openUrl: function (obj) {
+
+                    }
+                }),
+            customizeNav.$tree.on(
+            'tree.click',
+            function (event) {
+                console.log(event);
+                // event.preventDefault();
+                if (event.node) {
+                    $('.jqtree-tree').find('.jqtree-selected').removeClass('jqtree-selected');
+                    var node = event.node;
+                    customizeNav.$tree.tree('tree.open', node);
+
+                    $(node.element).addClass('jqtree-selected');
+                    triggerLink(node);
+                }
+            }
+            );
+            },
+            openCount:0,
+            openNode: function (id) {
+                try {
+                    customizeNav.openCount++;
+                    var node = customizeNav.$tree.tree('getNodeById', id);
+                    if (node == null) {
+                        if (customizeNav.openCount > 10) {
+                            customizeNav.openCount = 0;
+                            return;
+                        }
+                        window.setTimeout(customizeNav.openNode, 300, id);
+                        return;
+                    }
+                    var $tree = customizeNav.$tree.tree('openNode', node);
+                    var $node = $('.jqtree-title[data-nodeid="' + id + '"]');
+                    if ($node.length > 0) {
+                        var offsetT = $node.parents('.jqtree_common:first').position().top - 40;
+
+                        if ($('#sidebar').scrollTop() > 0) {
+                            offsetT += $('#sidebar').scrollTop();
+                        }
+                         if (offsetT < 0) {
+                            offsetT = 0;
+                        }
+                        $('#sidebar').scrollTop(offsetT);
+                    }
+                }catch(e){
+                    window.setTimeout(customizeNav.openNode, 300, id);
+                }
+            },
+            load: function (url,node) {
+                url += url.indexOf('?') > 0 ? '&solutionid=' + solutionid : '?solutionid=' + solutionid;
+
+                if (node&&node.type=='group')
+                    url = url + '&entitygroupid=' + node.id;
+                  console.log(node,url)
+                url = ORG_SERVERURL + url;
+                if (node && node.src) {
+                    url = node.src;
+                }
+                if (!node) return false;
+                $('#customTabNav').iframeLinks('addLink', { id: node.id, name: (node.name || node.label), other: node._parentname ? node._parentname + '-' : '', src: url, icon: (node.icon || getTypeIcon(node.type)) });
+                $('#bodyframe').prop('src', url); return;
+                Xms.Web.Load(url, function (response) {
+                    var data = $(response);
+                    var c = data.find('#main');
+                    if (c.length > 0)
+                        $('#main').replaceWith(c);
+                    else
+                        $('#main').empty();
+                });
+            },
+            loadComponents: function(node){
+                this.load('/customize/solution/components',node);
+
+            },
+            loadEntities: function (node) {
+                this.load('/customize/entity/index',node);
+            },
+            loadForms: function (entityid,node) {
+                this.load('/customize/systemform/index?entityid=' + entityid,node);
+
+            },
+            loadAttributes: function (entityid,node) {
+                this.load('/customize/attribute/index?entityid=' + entityid,node);
+            },
+            loadViews: function (entityid,node) {
+                this.load('/customize/queryview/index?entityid=' + entityid,node);
+            },
+            loadOptionSets: function (node) {
+                this.load('/customize/OptionSet/index',node);
+            },
+            loadRibbonButtons: function (entityid,node) {
+                this.load('/customize/ribbonbutton/index?entityid=' + entityid,node);
+            },
+            loadDuplicateRules: function (entityid,node) {
+                this.load('/customize/duplicaterule/index?entityid=' + entityid,node);
+
+            },
+            loadEntityMaps: function (entityid,node) {
+                this.load('/customize/entitymap/index?entityid=' + entityid,node);
+            },
+            loadRelations: function (entityid, type,node) {
+                this.load('/customize/relationship/index?entityid=' + entityid + '&type=' + type,node);
+            },
+            loadFilterRules: function (entityid,node) {
+                this.load('/customize/filterrule/index?entityid=' + entityid,node);
+            },
+            loadCharts: function (entityid,node) {
+                this.load('/customize/chart/index?entityid=' + entityid,node);
+            },
+            loadDashboards: function (node) {
+                this.load('/customize/dashboard/index',node);
+            },
+            loadReports: function (node) {
+                this.load('/customize/report/index',node);
+            },
+            loadWebResources: function (node) {
+                this.load('/customize/webresource/index',node);
+            },
+            loadWorkflows: function (node) {
+                this.load('/customize/flow/index',node);
+            },
+            loadAutoNumberRules: function (node) {
+                this.load('/customize/serialnumber/index',node);
+            },
+            loadPlugins: function (node) {
+                this.load('/customize/entityplugin/index',node);
+            },
+            loadFieldPermissions: function (node) {
+                this.load('/FieldSecurity/index',node);
+            },
+            loadLabels: function (node) {
+                this.load('/customize/localizedlabel/index',node);
+            }
+            , loadGloCharts: function(node) {
+                this.load('/customize/chart/index?entityid=' + emptyGuid,node);
+            }
+            , loadGloDuplicaterRule: function(node) {
+                 this.load('/customize/duplicaterule/index?entityid=' + emptyGuid,node);
+            }
+            , loadGloEntityMap: function(node) {
+                 this.load('/customize/entitymap/index?entityid=' + emptyGuid,node);
+            }
+            , loadGloFilterRule: function(node) {
+                 this.load('/customize/filterrule/index?entityid=' + emptyGuid,node);
+            }
+
+        }
+        var emptyGuid = Xms.Utility.Guid.EmptyGuid.ToString();
+
+        function checkIsCreateFormPage(){
+            var href = location.href;
+            if(href.indexOf("/customize/systemform/createform")>-1){
+                return true;
+            }
+            return false;
+        }
+
+        $.moHistory.setConfig(function (con) {
+            //配置页面跳转
+            con
+                .when("/solution", {
+                    controller: function (data) {
+
+                        if (checkIsCreateFormPage()) {
+                            if ($("#formModal").length > 0) {
+                                setTimeout(function () {
+                                    $("#formModal").modal("hide");
+                                    customizeNav.load('/customize/solution/editsolution?id=' + solutionid);
+                                }, 0);
+                            }
+                        } else {
+                            customizeNav.load('/customize/solution/editsolution?id=' + solutionid);
+                        }
+                       // historyLoaded(data,solutionid,'/customize/solution/editsolution?id=' + solutionid);
+                    }
+                })
+                .when("/component:lid", {
+                    controller: function (data) {
+                        if (checkIsCreateFormPage()) {
+                            if ($("#formModal").length > 0) {
+                                setTimeout(function () {
+                                    $("#formModal").modal("hide");
+                                    customizeNav.loadComponents();
+                                }, 0);
+                            }
+                        } else {
+                            customizeNav.loadComponents();
+                        }
+                      // historyLoaded(data);
+                    }
+                })
+                .when("/entity:pid", {
+                    controller: function (data) {
+                        var reg = data.reg.regexp;
+                        var hash = data.hash;
+                        var lid = hash.split(":");
+                        if (checkIsCreateFormPage()) {
+                            if ($("#formModal").length > 0) {
+                                setTimeout(function () {
+                                    $("#formModal").modal("hide");
+                                    customizeNav.load('/customize/entity/editentity?id=' + lid[1]);
+                                }, 0);
+                            }
+                        } else {
+                            customizeNav.load('/customize/entity/editentity?id=' + lid[1]);
+                        }
+                        historyLoaded(data,lid[1],'/customize/entity/editentity?id=' + lid[1]);
+                    }
+                })
+            .when("/form:lid", {
+                controller: function (data) {
+                    var reg = data.reg.regexp;
+                    var hash = data.hash;
+                    var lid = hash.split(":");
+                    if(checkIsCreateFormPage()){
+                        if ($("#formModal").length > 0) {
+                            setTimeout(function () {
+                                $("#formModal").modal("hide");
+                                customizeNav.loadForms(lid[1]);
+                            },0)
+                        }
+                    } else {
+                        customizeNav.loadForms(lid[1]);
+                    }
+                    historyLoaded(data,lid[1]);
+                }
+            })
+            .when("/view:lid", {
+                controller: function (data) {
+                    var reg = data.reg.regexp;
+                    var hash = data.hash;
+                    var lid = hash.split(":");
+                    if (checkIsCreateFormPage()) {
+                        if ($("#formModal").length > 0) {
+                            setTimeout(function () {
+                                $("#formModal").modal("hide");
+                                customizeNav.loadViews(lid[1]);
+                            }, 0);
+                        }
+                    } else {
+                        customizeNav.loadViews(lid[1]);
+                    }
+                    historyLoaded(data,lid[1]);
+                }
+            })
+            .when("/attribute:lid", {
+                controller: function (data) {
+                    var reg = data.reg.regexp;
+                    var hash = data.hash;
+                    var lid = hash.split(":");
+                    if (checkIsCreateFormPage()) {
+                        if ($("#formModal").length > 0) {
+                            setTimeout(function () {
+                                $("#formModal").modal("hide");
+                                customizeNav.loadAttributes(lid[1]);
+                            }, 0);
+                        }
+                    } else {
+                        customizeNav.loadAttributes(lid[1]);
+                    }
+                    historyLoaded(data,lid[1]);
+                }
+            })
+            .when("/ribbonbutton:lid", {
+                controller: function (data) {
+                    var reg = data.reg.regexp;
+                    var hash = data.hash;
+                    var lid = hash.split(":");
+                    if (checkIsCreateFormPage()) {
+                        if ($("#formModal").length > 0) {
+                            setTimeout(function () {
+                                $("#formModal").modal("hide");
+                                customizeNav.loadRibbonButtons(lid[1]);
+                            }, 0);
+                        }
+                    } else {
+                        customizeNav.loadRibbonButtons(lid[1]);
+                    }
+                    historyLoaded(data,lid[1]);
+                }
+            })
+            .when("/duplicaterules:lid", {
+                controller: function (data) {
+                    var reg = data.reg.regexp;
+                    var hash = data.hash;
+                    var lid = hash.split(":");
+                    if (checkIsCreateFormPage()) {
+                        if ($("#formModal").length > 0) {
+                            setTimeout(function () {
+                                $("#formModal").modal("hide");
+                                customizeNav.loadDuplicateRules(lid[1]);
+                            }, 0);
+                        }
+                    } else {
+                        customizeNav.loadDuplicateRules(lid[1]);
+                    }
+                    historyLoaded(data,lid[1]);
+                }
+            })
+            .when("/chart:lid", {
+                controller: function (data) {
+                    var reg = data.reg.regexp;
+                    var hash = data.hash;
+                    var lid = hash.split(":");
+                    if(checkIsCreateFormPage()){
+                        if ($("#formModal").length > 0) {
+                            setTimeout(function () {
+                                $("#formModal").modal("hide");
+                                customizeNav.loadCharts(lid[1]);
+                            }, 0);
+                        }
+                    } else {
+                        customizeNav.loadCharts(lid[1]);
+                    }
+                    historyLoaded(data,lid[1]);
+                }
+            })
+            .when("/optionset:lid", {
+                controller: function (data) {
+                    var reg = data.reg.regexp;
+                    var hash = data.hash;
+                    var lid = hash.split(":");
+                    if (checkIsCreateFormPage()) {
+                        if ($("#formModal").length > 0) {
+                            setTimeout(function () {
+                                $("#formModal").modal("hide");
+                                customizeNav.loadOptionSets(lid[1]);
+                            }, 0);
+                        }
+                    } else {
+                        customizeNav.loadOptionSets(lid[1]);
+                    }
+                    historyLoaded(data,lid[1]);
+                }
+            })
+            .when("/fieldpermission:lid", {
+                controller: function (data) {
+                    var reg = data.reg.regexp;
+                    var hash = data.hash;
+                    var lid = hash.split(":");
+                    if (checkIsCreateFormPage()) {
+                        if ($("#formModal").length > 0) {
+                            setTimeout(function () {
+                                $("#formModal").modal("hide");
+                                customizeNav.loadOptionSets(lid[1]);
+                            }, 0);
+                        }
+                    } else {
+                        customizeNav.loadOptionSets(lid[1]);
+                    }
+                    historyLoaded(data,lid[1]);
+                }
+            })
+            .when("/dashboard:lid", {
+                controller: function (data) {
+                    var reg = data.reg.regexp;
+                    var hash = data.hash;
+                    var lid = hash.split(":");
+                    if (checkIsCreateFormPage()) {
+                        if ($("#formModal").length > 0) {
+                            setTimeout(function () {
+                                $("#formModal").modal("hide");
+                                customizeNav.loadDashboards(lid[1]);
+                            }, 0);
+                        }
+                    } else {
+                        customizeNav.loadDashboards(lid[1]);
+                    }
+                    historyLoaded(data,lid[1]);
+                }
+            })
+                .when("/report:lid", {
+                    controller: function (data) {
+                        console.log(data)
+                        if (checkIsCreateFormPage()) {
+                            if ($("#formModal").length > 0) {
+                                setTimeout(function () {
+                                    $("#formModal").modal("hide");
+                                    customizeNav.loadReports();
+                                }, 0);
+                            }
+                        } else {
+                            customizeNav.loadReports();
+                        }
+                        historyLoaded(data,lid[1]);
+                    }
+                })
+                .when("/dashboard:lid", {
+                    controller: function (data) {
+                        var reg = data.reg.regexp;
+                        var hash = data.hash;
+                        var lid = hash.split(":");
+                        if (checkIsCreateFormPage()) {
+                            if ($("#formModal").length > 0) {
+                                setTimeout(function () {
+                                    $("#formModal").modal("hide");
+                                    customizeNav.loadDashboards(lid[1]);
+                                }, 0);
+                            }
+                        } else {
+                            customizeNav.loadDashboards(lid[1]);
+                        }
+                        historyLoaded(data,lid[1]);
+                    }
+                })
+                .when("/dashboard:lid", {
+                    controller: function (data) {
+                        var reg = data.reg.regexp;
+                        var hash = data.hash;
+                        var lid = hash.split(":");
+                        if (checkIsCreateFormPage()) {
+                            if ($("#formModal").length > 0) {
+                                setTimeout(function () {
+                                    $("#formModal").modal("hide");
+                                    customizeNav.loadDashboards(lid[1]);
+                                }, 0);
+                            }
+                        } else {
+                            customizeNav.loadDashboards(lid[1]);
+                        }
+                        historyLoaded(data,lid[1]);
+                    }
+                })
+            .otherwise("/solution");
+        });
+
+        function historyLoaded(data,id) {
+            if (id) {
+              //  xms_nav.openLeaf(id);
+            }
+        }
+
+        function getSolutions(){
+            var _url = '/customize/solution/index?getall=true';
+            Xms.Web.GetJson(_url,{},function(response){
+                if(response && response.content && response.content.items){
+                    console.log(response);
+                    buildSolutionsHtml(response.content.items)
+                }
+            });
+        }
+        function buildSolutionsHtml(datas){
+            var _htmls = [];
+            var $solutionsSelList = $('#solutionsSelList');
+            $.each(datas,function(key,item){
+                _htmls.push('<li class="" data-id="'+item.solutionid+'"> <a href="#" data-id="'+item.solutionid+'"> <span class="glyphicon glyphicon-tasks"></span> '+item.name+'</a></li>');
+            });
+            $solutionsSelList.html(_htmls.join(''));
+            var oldid =$solutionsSelList.attr('data-id');
+            $solutionsSelList.on('click',function(e){
+                var $this= $(this);
+                var $target = $(e.target);
+                var solutionid = $target.attr('data-id');
+                if(solutionid && oldid!=solutionid){
+                    location.href = ORG_SERVERURL + "/Customize/Index?solutionid="+solutionid;
+                }
+            });
+        }
+    </script>
+    @RenderSection("scripts", required: false)
+</body>
+</html>
