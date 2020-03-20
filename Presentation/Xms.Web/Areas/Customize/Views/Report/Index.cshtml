@@ -22,6 +22,7 @@
                                 <div class="btn-group btn-group-sm">
                                     <a class="btn btn-info" href="@("/"+app.OrganizationUniqueName)/customize/report/createreport?solutionid=@Model.SolutionId"><span class="glyphicon glyphicon-plus-sign"></span> @app.T["add"]</a>
                                     <button type="button" class="btnbtn-warning" data-action="/customize/report/deletereport" data-role="delete" data-tooltip="删除后相关数据也将一并删除，请提前备份数据"><span class="glyphicon glyphicon-trash"></span> @app.T["batch_delete"]</button>
+                                    <a class="btn btn-info" href="http://www.baidu.com/robots.txt" target="_blank"><span class="glyphicon glyphicon-plus-sign"></span> @app.T["download_ReportDesigner"]</a>
                                 </div>
                             </div>
                             <div class="col-sm-4">
@@ -111,7 +112,7 @@
                         var column = ui.column;
                         var recordid = datas[dataIndx];
                         var html = ''
-                        html = '<a class="btn btn-info btn-xs" href="/webforms/reportviewer.aspx?id=' + datas.reportid + '&orgid=' + datas.organizationid + '" target="_blank"><span class="glyphicon glyphicon-play-circle"></span> 预览</a>' +
+                        html = '<a class="btn btn-info btn-xs" href="@("/"+app.OrganizationUniqueName)/customize/ReportViewer/Index?id=' + datas.reportid + '&orgid=' + datas.organizationid + '" target="_blank"><span class="glyphicon glyphicon-play-circle"></span> 预览</a>' +
                             ' <a class="btn btn-default btn-xs" href="@("/"+app.OrganizationUniqueName)/customize/report/editreport?id=' + datas.reportid + '&solutionid=' + solutionid + '"><span class="glyphicon glyphicon-edit"></span> 编辑</a>' +
                             ' <a class="btn btn-warning btn-xs" href="javascript:Xms.Web.Del(\'' + datas.reportid + '\',\'/customize/report/deletereport\',false,rebind,null,\'确定删除？请提前备份数据\',true)"><span class="glyphicon glyphicon-trash"></span> 删除</a>';
                         return html

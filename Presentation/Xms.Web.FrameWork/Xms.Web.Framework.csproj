@@ -8,6 +8,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="3.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="3.0.1" />
+    <PackageReference Include="FastReport.OpenSource.Web" Version="2019.*" />
   </ItemGroup>
 
   <ItemGroup>

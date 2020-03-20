@@ -10,6 +10,7 @@ using System.Text.Unicode;
 using Xms.Core;
 using Xms.Identity;
 using Xms.Web.Framework.Middlewares;
+using FastReport.Web;
 
 namespace Xms.Web.Framework.Infrastructure
 {
@@ -91,6 +92,7 @@ namespace Xms.Web.Framework.Infrastructure
                     "{org}/customize/index",
                                   new { area = "customize", controller = "home", action = "index" });
             });
+            app.UseFastReport();
         }
     }
 }
