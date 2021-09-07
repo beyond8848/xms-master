@@ -96,7 +96,8 @@ namespace Xms.Logging.DataLog
             var datas = new List<EntityLogChangeData>();
             foreach (var item in newData)
             {
-                var originValue = originData.TryGetValue(item.Key, out object value) ? value.ToString() : "";
+                originData.TryGetValue(item.Key, out object value);
+                var originValue = value!=null? value.ToString() : "";
                 if (!originValue.IsCaseInsensitiveEqual(item.Value != null ? item.Value.ToString() : ""))
                 {
                     var attr = attributeMetadatas.Find(n => n.Name.IsCaseInsensitiveEqual(item.Key));
@@ -109,7 +110,7 @@ namespace Xms.Logging.DataLog
                             continue;
                         }
 
-                        datas.Add(new EntityLogChangeData() { Name = item.Key, Original = originData[item.Key].ToString(), Value = item.Value != null ? item.Value.ToString() : "" });
+                        datas.Add(new EntityLogChangeData() { Name = item.Key, Original=originData[item.Key]!=null?originData[item.Key].ToString():"", Value = item.Value != null ? item.Value.ToString() : "" });
                     }
                 }
             }

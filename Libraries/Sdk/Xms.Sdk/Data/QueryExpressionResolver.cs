@@ -372,7 +372,10 @@ namespace Xms.Sdk.Data
                     filterList.Add(string.Format("{0}.[OrganizationId]=@0", PocoHelper.WrapName(mainEntityAlias)));
                     Parameters.Args.Add(User.OrganizationId);
                 }
-                filterList.Add(")");
+                if (filterList.Count > 1)
+                    filterList.Add(")");
+                else
+                    filterList.Add("1=1)");
                 //team owner
                 if (MainEntity.EntityMask == EntityMaskEnum.User)
                 {

@@ -61,7 +61,6 @@
     var entityDatagirdList = new datagridList();
     var datagrid_count = 0;
     var toolbtns = [
-
         {
             classname: 'btn btn-link btn-xs', label: '插入行', name: 'addRow', enabled: true, icon: 'glyphicon glyphicon-plus', event: function (e, n, self) {
                 if (typeof dirtyChecker != 'undefined') {
@@ -74,11 +73,18 @@
                 self.$wrap.trigger('gridview.addRow', { e: e, n: n, self: self });
             }, eventtype: 'click'
         }
-
-        , {
+        ,{
             classname: 'btn btn-link btn-xs', label: '删除', name: 'saveGrid', enabled: true, icon: 'glyphicon glyphicon-trash', event: function (e, n, self) {
                 self.delDatas();
                 self.$wrap.trigger('gridview.deleteRow', { e: e, n: n, self: self });
+            }, eventtype: 'click'
+        },
+        {
+            classname: 'btn btn-link btn-xs', label: '上传', name: 'UploadInvoice', enabled: true, icon: 'glyphicon glyphicon-arrow-up', event: function (e, n, self) {
+                //self.delDatas();
+                Xms.Web.OpenDialog('/file/AttachmentsDialog?entityid=' + Xms.Page.PageContext.EntityId + '&objectid=' + Xms.Page.PageContext.RecordId);
+                //self.$wrap.trigger('gridview.deleteRow', { e: e, n: n, self: self });
+                //Need to reload data grid via invoking loadDataGrid method.
             }, eventtype: 'click'
         }];
     function entityDatagrid(id, $context, datas) {
@@ -191,6 +197,7 @@
         }
     }
     entityDatagrid.prototype.addButton = function (btninfo) {
+        //console.log(btninfo);
         this.$buttons.append(this._createButton(btninfo));
     }
     entityDatagrid.prototype._filterButtonInfoData = function () {

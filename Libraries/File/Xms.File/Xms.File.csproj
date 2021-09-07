@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.IO.Compression" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Configuration\Xms.Configuration\Xms.Configuration.csproj" />
     <ProjectReference Include="..\..\Module\Xms.Module.Abstractions\Xms.Module.Abstractions.csproj" />
     <ProjectReference Include="..\..\Sdk\Xms.Sdk\Xms.Sdk.csproj" />

@@ -19,9 +19,12 @@ namespace Xms.EventConsumers.Entity
             _dataUpdater = dataUpdater;
         }
 
+        
         public void HandleEvent(WorkFlowExecutedEvent eventMessage)
         {
-            this.Update(eventMessage.Context.EntityMetaData, eventMessage.Context.InstanceInfo.ObjectId, eventMessage.Context.ProcessState);
+            //修改bug 如果流程有多个节点，多分支情况，不是下个环节处理就结束流程,
+            WorkFlowProcessState workFlowProcessState = eventMessage.Result.NextHandlerId != null && eventMessage.Result.NextHandlerId.Count > 0 ? WorkFlowProcessState.Processing : eventMessage.Context.ProcessState;
+            this.Update(eventMessage.Context.EntityMetaData, eventMessage.Context.InstanceInfo.ObjectId, workFlowProcessState);
         }
 
         public void HandleEvent(WorkFlowCancelledEvent eventMessage)

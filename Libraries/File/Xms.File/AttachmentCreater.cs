@@ -93,6 +93,10 @@ namespace Xms.File
                         .SetAttributeValue("entityid", entityId)
                         .SetAttributeValue("objectid", objectId);
                         attachments.Add(ent);
+
+                        //这里加上OCR识别逻辑////////////////////////////////////////////////////////////////.
+                        //识别完之后，加入到发票明细表中，同时调用ajax刷新明细表页面。
+                        ////////////////////////////////////////////////////////////////////////////////////
                     }
                 }
             }

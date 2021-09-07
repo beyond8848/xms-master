@@ -15,7 +15,7 @@ namespace Xms.Notify.Email
 
         public object Send(NotifyBody body)
         {
-            var ibody = body as EmailNotifyBody;
+            var ibody = new EmailNotifyBody(body);
             SmtpClient smtp = new SmtpClient
             {
                 DeliveryMethod = SmtpDeliveryMethod.Network,

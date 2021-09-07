@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using Xms.Notify.Abstractions;
 
 namespace Xms.Notify.Email
@@ -46,5 +47,24 @@ namespace Xms.Notify.Email
         public Encoding BodyEncoding { get; set; } = Encoding.GetEncoding("utf-8");
 
         public bool IsBodyHtml { get; set; } = false;
+
+        public EmailNotifyBody() { }
+
+        public EmailNotifyBody(NotifyBody parentObj)
+        {
+            SynchronizationProperties(parentObj, this);
+        }
+
+        void SynchronizationProperties(object src, object des)
+        {
+            Type srcType = src.GetType();
+            object val;
+            foreach (var item in srcType.GetProperties())
+            {
+                val = item.GetValue(src);
+                item.SetValue(des, val);
+
+            }
+        }
     }
 }

@@ -151,7 +151,7 @@
                         }
                     }
                 }
-
+                //注册添加附件功能
                 $('.subtools').click(function () {
                     var type = $(this).attr('data-type');
                     if (type == 'attach') {

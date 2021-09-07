@@ -16,6 +16,7 @@ namespace Xms.File
             services.AddScoped<File.IAttachmentCreater, File.AttachmentCreater>();
             services.AddScoped<File.IAttachmentFinder, File.AttachmentFinder>();
             services.AddScoped<File.IAttachmentDeleter, File.AttachmentDeleter>();
+            services.AddScoped<File.IMetaFileGenerator, File.MetaFileGenerator>();
         }
     }
 }

@@ -154,6 +154,7 @@
                         GridViewModel.resetRowNumber();
                         GridViewModel.savetable();
                     });
+
                     $(GridViewModel.sectionid + ' button[name=saveBtnLocal]').off('click').on('click', null, function (e) {
                         saveCurrentSubGrid();
                         $('body').trigger('gridview.save');

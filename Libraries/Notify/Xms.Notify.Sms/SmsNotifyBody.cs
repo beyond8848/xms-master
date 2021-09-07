@@ -1,4 +1,5 @@
-﻿using Xms.Notify.Abstractions;
+﻿using System;
+using Xms.Notify.Abstractions;
 
 namespace Xms.Notify.Sms
 {
@@ -8,5 +9,22 @@ namespace Xms.Notify.Sms
     public class SmsNotifyBody : NotifyBody
     {
         public string To { get; set; }
+
+        public SmsNotifyBody(NotifyBody parentObj)
+        {
+            SynchronizationProperties(parentObj, this);
+        }
+
+        void SynchronizationProperties(object src, object des)
+        {
+            Type srcType = src.GetType();
+            object val;
+            foreach (var item in srcType.GetProperties())
+            {
+                val = item.GetValue(src);
+                item.SetValue(des, val);
+
+            }
+        }
     }
 }

@@ -95,8 +95,9 @@ namespace Xms.Web.Customize.Controllers
                     byte[] heByte = new byte[fsLen];
                     using (Stream s = new MemoryStream())
                     {
-                        await model.ReportFile.CopyToAsync(s).ConfigureAwait(false);
-                        await s.ReadAsync(heByte, 0, heByte.Length).ConfigureAwait(false);
+                        await model.ReportFile.CopyToAsync(s);
+                        s.Seek(0, SeekOrigin.Begin);
+                        await s.ReadAsync(heByte, 0, heByte.Length);
                         string bodytext = System.Text.Encoding.UTF8.GetString(heByte);
                         entity.BodyText = bodytext;
                     }
