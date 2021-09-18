@@ -7,11 +7,12 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace DotNetCoreTest
+namespace Xms.OCR
 {
     public static class Util
 	{
@@ -218,7 +219,7 @@ namespace DotNetCoreTest
 			return str;
 		}
 
-
+		[HandleProcessCorruptedStateExceptions]
 		public static Invoice OCR_Invoice(string filePath,string configPath,bool getPhoto)
 		{
 			Invoice invoice = new Invoice();
@@ -245,37 +246,39 @@ namespace DotNetCoreTest
 			float Y_times = (float)mat.Height / 1650;
 			Box.InitTimes(X_times, Y_times); 
 			StringBuilder stringBuilder = new StringBuilder(configPath);
-			IntPtr reconginzedStringPtr = Rec(source, mat.Height, mat.Width,stringBuilder);
-			mat.Dispose();
-			byte[] bytes = System.Text.Encoding.Unicode.GetBytes(Marshal.PtrToStringUni(reconginzedStringPtr));//转成UNICODE编码
-			string result = System.Text.Encoding.UTF8.GetString(bytes);//转成UTF8
-			OcrJson ocr = JsonHelper.DeserializeJsonToObject<OcrJson>(result);
-			#endregion
-			#region 构建实体
-			//判断发票抬头
-			if (ocr == null)
-				return null;
-			string title = GetValue(BoxEnum.N_Ele_Title, ocr.array);
-			if (!string.IsNullOrEmpty(title))
+			try
 			{
-				invoice.Normal = new NormalInvoice()
+				IntPtr reconginzedStringPtr = Rec(source, mat.Height, mat.Width, stringBuilder);
+				mat.Dispose();
+				byte[] bytes = System.Text.Encoding.Unicode.GetBytes(Marshal.PtrToStringUni(reconginzedStringPtr));//转成UNICODE编码
+				string result = System.Text.Encoding.UTF8.GetString(bytes);//转成UTF8
+				OcrJson ocr = JsonHelper.DeserializeJsonToObject<OcrJson>(result);
+				#endregion
+				#region 构建实体
+				//判断发票抬头
+				if (ocr == null)
+					return null;
+				string title = GetValue(BoxEnum.N_Ele_Title, ocr.array);
+				if (!string.IsNullOrEmpty(title))
 				{
-					Title = title,
-					Buyer = new Company()
+					invoice.Normal = new NormalInvoice()
 					{
-						Identification = GetValue(BoxEnum.N_B_Identification, ocr.array),
-						Name = GetValue(BoxEnum.N_B_Name, ocr.array),
-						Bank_ID = GetValue(BoxEnum.N_B_Bank, ocr.array),
-						Location_Tel = GetValue(BoxEnum.N_B_Location, ocr.array),
-					},
-					Seller = new Company()
-					{
-						Identification = GetValue(BoxEnum.N_S_Identification, ocr.array),
-						Name = GetValue(BoxEnum.N_S_Name, ocr.array),
-						Bank_ID = GetValue(BoxEnum.N_S_Bank, ocr.array),
-						Location_Tel = GetValue(BoxEnum.N_S_Location, ocr.array),
-					},
-					Items = new List<Project>()
+						Title = title,
+						Buyer = new Company()
+						{
+							Identification = GetValue(BoxEnum.N_B_Identification, ocr.array),
+							Name = GetValue(BoxEnum.N_B_Name, ocr.array),
+							Bank_ID = GetValue(BoxEnum.N_B_Bank, ocr.array),
+							Location_Tel = GetValue(BoxEnum.N_B_Location, ocr.array),
+						},
+						Seller = new Company()
+						{
+							Identification = GetValue(BoxEnum.N_S_Identification, ocr.array),
+							Name = GetValue(BoxEnum.N_S_Name, ocr.array),
+							Bank_ID = GetValue(BoxEnum.N_S_Bank, ocr.array),
+							Location_Tel = GetValue(BoxEnum.N_S_Location, ocr.array),
+						},
+						Items = new List<Project>()
 					{
 						new Project()
 						{
@@ -287,25 +290,30 @@ namespace DotNetCoreTest
 							Tax = GetValue(BoxEnum.N_Tax, ocr.array),
 						}
 					},
-					InvoiceID = GetValue(BoxEnum.N_InvoiceID, ocr.array),
-					InvoiceNo = GetValue(BoxEnum.N_InvoiceNo, ocr.array),
-					InvoicingDate = GetValue(BoxEnum.N_InvoicingDate, ocr.array),
-					CheckID = GetValue(BoxEnum.N_CheckID, ocr.array),
-					MachineID = GetValue(BoxEnum.N_MachineID, ocr.array),
-					PriceTaxTotal_CHS = GetValue(BoxEnum.N_PriceTaxTotal_CHS, ocr.array),
-					PriceTaxTotal_Num = GetValue(BoxEnum.N_PriceTaxTotal_Num, ocr.array),
-					Recipient = GetValue(BoxEnum.N_Recipient, ocr.array),
-					Checker = GetValue(BoxEnum.N_Checker, ocr.array),
-					Invoicer = GetValue(BoxEnum.N_Invoicer, ocr.array),
-				};
-			}
-			else if (!string.IsNullOrEmpty(""))
-			{
+						InvoiceID = GetValue(BoxEnum.N_InvoiceID, ocr.array),
+						InvoiceNo = GetValue(BoxEnum.N_InvoiceNo, ocr.array),
+						InvoicingDate = GetValue(BoxEnum.N_InvoicingDate, ocr.array),
+						CheckID = GetValue(BoxEnum.N_CheckID, ocr.array),
+						MachineID = GetValue(BoxEnum.N_MachineID, ocr.array),
+						PriceTaxTotal_CHS = GetValue(BoxEnum.N_PriceTaxTotal_CHS, ocr.array),
+						PriceTaxTotal_Num = GetValue(BoxEnum.N_PriceTaxTotal_Num, ocr.array),
+						Recipient = GetValue(BoxEnum.N_Recipient, ocr.array),
+						Checker = GetValue(BoxEnum.N_Checker, ocr.array),
+						Invoicer = GetValue(BoxEnum.N_Invoicer, ocr.array),
+					};
+				}
+				else if (!string.IsNullOrEmpty(""))
+				{
 
+				}
+				#endregion
+				GC.Collect();
+				return invoice;
 			}
-			#endregion
-			GC.Collect();
-			return invoice;
+			catch(Exception ex)
+            {
+				return null;
+            }
 		}
 
 

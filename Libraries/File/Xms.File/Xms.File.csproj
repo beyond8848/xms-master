@@ -9,6 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Xms.OCR\Xms.OCR.csproj" />
     <ProjectReference Include="..\..\Configuration\Xms.Configuration\Xms.Configuration.csproj" />
     <ProjectReference Include="..\..\Module\Xms.Module.Abstractions\Xms.Module.Abstractions.csproj" />
     <ProjectReference Include="..\..\Sdk\Xms.Sdk\Xms.Sdk.csproj" />

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 
-namespace DotNetCoreTest
+namespace Xms.OCR
 {
     public class Invoice
     {

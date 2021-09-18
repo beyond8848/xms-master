@@ -1,6 +1,7 @@
 ﻿using System;
 
-namespace DotNetCoreTest
+
+namespace Xms.OCR
 {
     class Program
     {

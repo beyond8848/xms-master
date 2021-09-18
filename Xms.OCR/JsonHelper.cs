@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace DotNetCoreTest
+namespace Xms.OCR
 {
     public static class JsonHelper
     {

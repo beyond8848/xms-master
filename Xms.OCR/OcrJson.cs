@@ -1,7 +1,7 @@
 ﻿using OpenCvSharp;
 using System.Collections.Generic;
 
-namespace DotNetCoreTest
+namespace Xms.OCR
 {
     public class OcrJson
     {
