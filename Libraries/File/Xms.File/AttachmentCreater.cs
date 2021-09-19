@@ -7,6 +7,7 @@ using Xms.Context;
 using Xms.Core.Data;
 using Xms.File.Extensions;
 using Xms.Infrastructure.Utility;
+using Xms.OCR;
 using Xms.Sdk.Client;
 
 namespace Xms.File
@@ -96,6 +97,54 @@ namespace Xms.File
 
                         //这里加上OCR识别逻辑////////////////////////////////////////////////////////////////.
                         //识别完之后，加入到发票明细表中，同时调用ajax刷新明细表页面。
+                        //  Invoice invoice = Util.OCR_Invoice(@"D:\test\fapiao.pdf", @"F:\VS\PaddleOCR-release-2.1\config.txt", false);
+                        //NormalInvoice ins = invoice.Normal;
+                        //Company cp = invoice.Company();
+                        //Project pj = invoice.Project();
+                        NormalInvoice ni = new NormalInvoice();
+                        Company cp = new Company();
+                        Project pj = new Project();
+                        Entity ent2 = new Entity("ReimbursedDetail")
+                       .SetIdValue(id)
+                       //地点 not null
+                       .SetAttributeValue("Address","")
+                       //数量 not null
+                       .SetAttributeValue("Amount","")
+                       //创建者
+                       .SetAttributeValue("CreatedBy", file.ContentType)
+                       //创建日期
+                       .SetAttributeValue("CreatedOn", DateTime.Now)
+                       //结束时间 not null
+                       .SetAttributeValue("FeeEndTime", DateTime.Now)
+                       //开始时间 not null
+                       .SetAttributeValue("FeeStartTime", DateTime.Now)
+                       //金额 not null
+                       .SetAttributeValue("MoneyAmount","")
+                       //名称 
+                       .SetAttributeValue("Name", "")
+                       //组织
+                       .SetAttributeValue("OrganizationId", "")
+                       //所有者
+                       .SetAttributeValue("OwnerId", "")
+                       //所有者类型
+                       .SetAttributeValue("OwnerIdType", "")
+                       //所有者部门 not null
+                       .SetAttributeValue("OwningBusinessUnit", "")
+                       //报销明细 主键 
+                       .SetAttributeValue("ReimbursedDetailId", "")
+                       //报销类型 not null
+                       .SetAttributeValue("ReimbursedType", "")
+                       //报销单 not null
+                       .SetAttributeValue("ReimbursementId", "")
+                       //状态
+                       .SetAttributeValue("StateCode", "")
+                       //状态描述
+                       .SetAttributeValue("StatusCode", "")
+                       //单价 not null
+                       .SetAttributeValue("UnitFee", "")
+                       //时间戳
+                       .SetAttributeValue("VersionNumber", "");
+                        _dataCreater.Create(ent2);
                         ////////////////////////////////////////////////////////////////////////////////////
                     }
                 }

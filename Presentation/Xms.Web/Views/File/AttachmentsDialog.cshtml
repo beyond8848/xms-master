@@ -129,6 +129,11 @@
                             <script src="/content/js/jquery.bootpag.min.js?v=@app.PlatformSettings.VersionNumber"></script>
                             <script src="/content/js/jquery.form.js?v=@app.PlatformSettings.VersionNumber"></script>
                             <script>
+                                $(".close").click(function () {
+                                    if ($('[name=searchBtn]').length > 0)
+                                        $('[name=searchBtn]').click();
+                                })
+
                                 var AttachmentModel = {
                                     dialog: $('#attachmentModal'),
                                     dialogid: '#attachmentModal',
