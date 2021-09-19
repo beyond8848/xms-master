@@ -6,8 +6,10 @@ using Xms.Configuration;
 using Xms.Context;
 using Xms.Core.Data;
 using Xms.File.Extensions;
+using Xms.Identity;
 using Xms.Infrastructure.Utility;
 using Xms.OCR;
+using Xms.Sdk.Abstractions;
 using Xms.Sdk.Client;
 
 namespace Xms.File
@@ -73,6 +75,7 @@ namespace Xms.File
         {
             //附件
             List<Entity> attachments = new List<Entity>();
+            List<Entity> reimbursedDetails = new List<Entity>();
             if (files.NotEmpty())
             {
                 for (int i = 0; i < files.Count; i++)
@@ -102,49 +105,49 @@ namespace Xms.File
                         //Company cp = invoice.Company();
                         //Project pj = invoice.Project();
                         NormalInvoice ni = new NormalInvoice();
-                        Company cp = new Company();
-                        Project pj = new Project();
                         Entity ent2 = new Entity("ReimbursedDetail")
                        .SetIdValue(id)
                        //地点 not null
-                       .SetAttributeValue("Address","")
+                       .SetAttributeValue("Address", "")
                        //数量 not null
-                       .SetAttributeValue("Amount","")
+                       .SetAttributeValue("Amount", 1)
                        //创建者
-                       .SetAttributeValue("CreatedBy", file.ContentType)
+                       .SetAttributeValue("CreatedBy", new EntityReference("systemuser", _appContext.GetFeature<ICurrentUser>().SystemUserId))
                        //创建日期
                        .SetAttributeValue("CreatedOn", DateTime.Now)
                        //结束时间 not null
-                       .SetAttributeValue("FeeEndTime", DateTime.Now)
+                       .SetAttributeValue("FeeEndTime", ni.InvoicingDate)
                        //开始时间 not null
-                       .SetAttributeValue("FeeStartTime", DateTime.Now)
+                       .SetAttributeValue("FeeStartTime", ni.InvoicingDate)
                        //金额 not null
-                       .SetAttributeValue("MoneyAmount","")
+                       .SetAttributeValue("MoneyAmount", new Money(Convert.ToDecimal(ni.PriceTaxTotal_Num)))
                        //名称 
-                       .SetAttributeValue("Name", "")
+                       .SetAttributeValue("Name", "电子发票")
                        //组织
-                       .SetAttributeValue("OrganizationId", "")
+                       .SetAttributeValue("OrganizationId", new EntityReference("organization", _appContext.GetFeature<ICurrentUser>().OrganizationId))
                        //所有者
-                       .SetAttributeValue("OwnerId", "")
+                       .SetAttributeValue("OwnerId", new OwnerObject(OwnerTypes.SystemUser, _appContext.GetFeature<ICurrentUser>().SystemUserId))
                        //所有者类型
-                       .SetAttributeValue("OwnerIdType", "")
+                       .SetAttributeValue("OwnerIdType", 1)
                        //所有者部门 not null
-                       .SetAttributeValue("OwningBusinessUnit", "")
+                       .SetAttributeValue("OwningBusinessUnit", new EntityReference("businessunit", _appContext.GetFeature<ICurrentUser>().BusinessUnitId))
                        //报销明细 主键 
-                       .SetAttributeValue("ReimbursedDetailId", "")
+                       .SetAttributeValue("ReimbursedDetailId", System.Guid.NewGuid().ToString())
                        //报销类型 not null
-                       .SetAttributeValue("ReimbursedType", "")
+                       .SetAttributeValue("ReimbursedType", "1")
                        //报销单 not null
-                       .SetAttributeValue("ReimbursementId", "")
+                       .SetAttributeValue("ReimbursementId", new EntityReference("Reimbursement", objectId))
                        //状态
-                       .SetAttributeValue("StateCode", "")
+                       .SetAttributeValue("StateCode", "1")
                        //状态描述
-                       .SetAttributeValue("StatusCode", "")
+                       .SetAttributeValue("StatusCode", "0")
                        //单价 not null
-                       .SetAttributeValue("UnitFee", "")
-                       //时间戳
-                       .SetAttributeValue("VersionNumber", "");
-                        _dataCreater.Create(ent2);
+                       .SetAttributeValue("UnitFee", 1.00)
+                       .SetAttributeValue("AssociatedFilePath", savePath)
+                       .SetAttributeValue("InvoiceCode", ni.InvoiceNo)
+                       .SetAttributeValue("ArchiveNo","");
+
+                        reimbursedDetails.Add(ent2);
                         ////////////////////////////////////////////////////////////////////////////////////
                     }
                 }
@@ -152,7 +155,10 @@ namespace Xms.File
             //保存附件
             if (attachments.Count > 0)
             {
+                //保存附件
                 _dataCreater.CreateMany(attachments);
+                //保存报销明细
+                _dataCreater.CreateMany(reimbursedDetails);
                 return attachments;//.Select(x=>x["cdnpath"].ToString()).ToList();
             }
             return null;
