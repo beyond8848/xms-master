@@ -6,8 +6,12 @@ using System.Reflection;
 using System.Text;
 using Xms.Context;
 using Xms.Core.Data;
+using Xms.Flow.Abstractions;
+using Xms.Flow.Core.Events;
+using Xms.Flow.Domain;
 using Xms.Identity;
 using Xms.Infrastructure.Utility;
+using Xms.Logging.AppLog;
 using Xms.Sdk.Abstractions.Query;
 using Xms.Sdk.Client;
 
@@ -20,40 +24,212 @@ namespace Xms.File
     {
         private readonly IAppContext _appContext;
         private readonly IDataFinder _dataFinder;
+        private readonly ILogService _logService;
+
         public string mainEntityName = "Reimbursement";
         public string subEntityName = "ReimbursedDetail";
 
-        public string tempArchiveFolderPath = System.AppDomain.CurrentDomain.BaseDirectory + "\\_temp";
-        public string destinationZipFilePath = "";
+        /// <summary>
+        /// 报销档案数据包所临时存储初
+        /// </summary>
+        public string tempArchiveFolderPath  = System.AppDomain.CurrentDomain.BaseDirectory + @"_temp";
+        /// <summary>
+        /// 报销流程PDF文件
+        /// </summary>
+        public string workflowPDFFilePath    = System.AppDomain.CurrentDomain.BaseDirectory + @"_temp\报销流程信息.pdf";
+        /// <summary>
+        /// 上传的发票所在临时位置
+        /// </summary>
+        public string attachmentFolderPath   = System.AppDomain.CurrentDomain.BaseDirectory + @"_temp\Attachments";
+        /// <summary>
+        /// 文件池
+        /// </summary>
+        public string ASIPFILEPOOLPath = System.AppDomain.CurrentDomain.BaseDirectory + @"ASIP_POOL_FILES";
 
-        public MetaFileGenerator(IAppContext appContext, IDataFinder dataFinder) :base(appContext)
+        public MetaFileGenerator(IAppContext appContext, IDataFinder dataFinder,ILogService logService) :base(appContext)
         {
             _appContext = appContext;
             _dataFinder = dataFinder;
+            _logService = logService;
+        }
+
+
+        /// <summary>
+        /// 拷贝上传的PDF，JPG文件.
+        /// </summary>
+        /// <param name="fullPathFiles"></param>
+        public void CopyInvoiceFileToAttachmentFolder(List<string> fullPathFiles)
+        {
+            //复制之前，清楚相关文件。
+            if (!Directory.Exists(attachmentFolderPath))
+                Directory.CreateDirectory(attachmentFolderPath);
+            else
+            {
+                foreach (var directory in Directory.GetFileSystemEntries(attachmentFolderPath))
+                    if (System.IO.File.Exists(directory))
+                        System.IO.File.Delete(directory); //直接删除其中的文件  
+            }
+            //然后，开始拷贝文件
+            foreach (var file in fullPathFiles)
+                System.IO.File.Copy(file, attachmentFolderPath+"\\"+System.IO.Path.GetFileName(file));
         }
 
         /// <summary>
         /// 把文件生XML，PDF成出来，并生成数据包，同时保存到ZIP文件中。
         /// </summary>
         /// <param name="mainEntityID"></param>
-        public void  ZipFiles(Guid mainEntityID)
+        public void  ZipFiles(Guid mainEntityID, List<WorkFlowInstance> workFlowInstances)
         {
-            this.GenerateFileXML(mainEntityID);
-            ZipArchiveHelper.CreatZip(tempArchiveFolderPath, destinationZipFilePath, CompressionLevel.Fastest);
+            if(workFlowInstances.Count<=0)
+            {
+                _logService.Warning("输出工作流实例信息!");
+            }
+
+            try
+            {
+                //获取附件文件,需要从报销明细表里去获取，因为用户有可能删除报销明细
+                List<string> fullPathFiles = this.GetPDFFiles(mainEntityID.ToString());
+                if (fullPathFiles != null)
+                    this.CopyInvoiceFileToAttachmentFolder(fullPathFiles);
+
+                //附件流程信息包
+                this.CreateWorkFlowPDFWithMultipleInstance(_logService,workFlowInstances);
+
+                //生成ASIP数据包中的XML文件
+                string archiveNO = this.GenerateFileXML(mainEntityID, workFlowInstances[0].Steps);
+
+                //设定压缩包文件名。
+                string destinationZipFilePath = System.AppDomain.CurrentDomain.BaseDirectory + @"_tempZip\" + archiveNO + ".zip";
+                //压缩文件，生成ASIP整个数据包。
+                ZipArchiveHelper.CreatZip(_logService, tempArchiveFolderPath, destinationZipFilePath, CompressionLevel.Fastest);
+
+                //拷贝压缩ASIP文件包到指定的位置。
+                if (System.IO.File.Exists(destinationZipFilePath))
+                {
+                    if (!Directory.Exists(ASIPFILEPOOLPath))
+                    {
+                        Directory.CreateDirectory(ASIPFILEPOOLPath);
+                    }
+
+                    System.IO.File.Copy(destinationZipFilePath, ASIPFILEPOOLPath + @"\" + System.IO.Path.GetFileName(destinationZipFilePath), true);
+                }
+            }catch(Exception ex)
+            {
+                _logService.Error("Failed to Generate ASIP Data package", ex);
+            }
         }
 
-        public void GenerateFileXML(Guid entityId)
+
+        /// <summary>
+        /// 得到所有文件。
+        /// </summary>
+        /// <param name="objectId"></param>
+        /// <returns></returns>
+        private List<string> GetPDFFiles(string objectId)
         {
+            var query = new QueryExpression("Attachment", _appContext.GetFeature<ICurrentUser>().UserSettings.LanguageId);
+            query.ColumnSet.AddColumns("cdnpath");
+            query.Criteria.AddCondition("ObjectId", ConditionOperator.Equal, objectId);
+            List<Entity> subEntities = _dataFinder.RetrieveAll(query);
+            string baseDir = System.AppDomain.CurrentDomain.BaseDirectory;
+            List<string> files = new List<string>();
+            string filePath = string.Empty;
+            foreach (var entity in subEntities)
+            {
+                filePath = baseDir + "\\..\\..\\..\\" + entity.GetStringValueExtension("cdnpath");
+                if(System.IO.File.Exists(filePath))
+                files.Add(filePath);
+            }
+
+            return files;
+        }
+
+        /// <summary>
+        /// 生成工作流备忘PDF
+        /// </summary>
+        /// <param name="workFlowProcesses"></param>
+        public void CreateWorkFlowPDFWithMultipleInstance(ILogService _logService,List<WorkFlowInstance> workflowInstances)
+        {
+            PDFCreator<WorkFlowTinyInfo> pDFCreator = new PDFCreator<WorkFlowTinyInfo>();
+            pDFCreator.CreateWorkFlowPDFForMultipleWorkFlowInsance(_logService,workflowPDFFilePath, workflowInstances);
+        }
+
+        /// <summary>
+        /// 生成工作流备忘PDF
+        /// </summary>
+        /// <param name="workFlowProcesses"></param>
+        public void CreateWorkFlowPDF(List<WorkFlowProcess> workFlowProcesses)
+        {
+            List<WorkFlowTinyInfo> workFlowTinyInfos = new List<WorkFlowTinyInfo>();
+            foreach(var workflowinfo in workFlowProcesses)
+            {
+                WorkFlowTinyInfo workFlowTinyInfo = new WorkFlowTinyInfo
+                {
+                    Description = workflowinfo.Description,
+                    HandleName = workflowinfo.Name,
+                    HandlerIdName = workflowinfo.HandlerIdName,
+                    Status = GetStatusDesc(workflowinfo.StateCode),
+                    processedTime = workflowinfo.HandleTime.Value
+                };
+
+                workFlowTinyInfos.Add(workFlowTinyInfo);
+            }
+
+            PDFCreator<WorkFlowTinyInfo> pDFCreator = new PDFCreator<WorkFlowTinyInfo>();
+            pDFCreator.CreateWorkFlowPDF<WorkFlowTinyInfo>(workflowPDFFilePath, workFlowTinyInfos, new float[] { 20, 35, 45, 50 });
+        }
+
+        private string GetStatusDesc(WorkFlowProcessState StateCode)
+        {
+            string statusDesc = "";
+            if(StateCode == WorkFlowProcessState.Passed)
+            {
+                statusDesc = "通过";
+            }
+            else if(StateCode == WorkFlowProcessState.Canceled)
+            {
+                statusDesc = "取消";
+            }
+            else if (StateCode == WorkFlowProcessState.Disabled)
+            {
+                statusDesc = "禁用";
+            }
+            else if (StateCode == WorkFlowProcessState.Processing)
+            {
+                statusDesc = "处理中";
+            }
+            else if (StateCode == WorkFlowProcessState.UnPassed)
+            {
+                statusDesc = "未通过";
+            }
+            else if (StateCode == WorkFlowProcessState.Waiting)
+            {
+                statusDesc = "等待";
+            }
+
+            return statusDesc;
+        }
+
+        /// <summary>
+        /// 生成文件包说明文件，目录信息文件和发票文件。
+        /// </summary>
+        /// <param name="entityId"></param>
+        /// <param name="workFlowProcesses"></param>
+        /// <returns></returns>
+        public string GenerateFileXML(Guid entityId, List<WorkFlowProcess> workFlowProcesses)
+        {
+            string strArchiveNo = string.Empty;
             Entity mainEntity = _dataFinder.RetrieveById(mainEntityName,entityId);
             if(mainEntity!=null)
             {
+                strArchiveNo = mainEntity.GetStringValueExtension("ClaimNo");
                 var query = new QueryExpression(subEntityName, _appContext.GetFeature<ICurrentUser>().UserSettings.LanguageId);
                 query.ColumnSet.AddColumns("attachmentid", "cdnpath");
-                query.Criteria.AddCondition("ReimbursedDetailId", ConditionOperator.Equal, entityId);
+                query.Criteria.AddCondition("ReimbursementId", ConditionOperator.Equal, entityId);
                 List<Entity> subEntities = _dataFinder.RetrieveAll(query);
                 ArchiveInstructions archiveInstructions = new ArchiveInstructions
                 {
-                    ArchiveItemInstance = new ArchiveInstructions.ArchiveItem
+                    ArchiveItemInstance = new ArchiveItem
                     {
                         Claimer = mainEntity.GetStringValueExtension("Claimer"),
                         Amount =  mainEntity.GetDecimalValueExtension("MoneyAmount"),
@@ -63,7 +239,7 @@ namespace Xms.File
                         Reason = mainEntity.GetStringValueExtension("reason"),
                         Title = mainEntity.GetStringValueExtension("name")
                     },
-                    FilePackageInstance = new ArchiveInstructions.FilePackage
+                    FilePackageInstance = new FilePackage
                     {
                          CreatedTime = System.DateTime.Now,
                          CreatedBy  = _appContext.GetFeature<ICurrentUser>().LoginName
@@ -87,10 +263,12 @@ namespace Xms.File
                             EndTime = subEntity.GetDateValueExtension("FeeEndTime"),
                             UnitPrice = subEntity.GetDecimalValueExtension("UnitFee")
                         };
+                        fileMetaItems.Add(fileMetaItem);
                     }
                     this.CreateFileMetaXML(fileMetaItems);
                 }
             }
+            return strArchiveNo;
         }
 
         /// <summary>
@@ -100,31 +278,10 @@ namespace Xms.File
         public void CreateArchiveInstructionsXML(ArchiveInstructions archiveInstructions)
         {
             if (archiveInstructions == null) return;
-
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("<ArchiveInstructions>");
-            //增加文件包相关属性。
-            sb.AppendLine("<FilePackage>");
-            PropertyInfo[] propertyInfos = archiveInstructions.FilePackageInstance.GetType().GetProperties();
-            foreach (var pi in propertyInfos)
-            {
-                sb.AppendLine("<" + pi.Name + ">");
-                sb.AppendLine(pi.GetValue(archiveInstructions.FilePackageInstance).ToString());
-                sb.AppendLine("</" + pi.Name + ">");
-            }
-            sb.AppendLine("</FilePackage>");
-            sb.AppendLine("<ArchiveItem>");
-            propertyInfos = archiveInstructions.ArchiveItemInstance.GetType().GetProperties();
-            foreach (var pi in propertyInfos)
-            {
-                sb.AppendLine("<" + pi.Name + ">");
-                sb.AppendLine(pi.GetValue(archiveInstructions.ArchiveItemInstance).ToString());
-                sb.AppendLine("</" + pi.Name + ">");
-            }
-            sb.AppendLine("</ArchiveItem>");
-            sb.AppendLine("</ArchiveInstructions>");
-
-            SaveToXMLFile(tempArchiveFolderPath+"\\ArchiveInstructions.xml", sb.ToString());
+            if (!Directory.Exists(tempArchiveFolderPath))
+                Directory.CreateDirectory(tempArchiveFolderPath);
+            string sb = XmlSerializeHelper.XmlSerialize<ArchiveInstructions>(archiveInstructions);
+            SaveToXMLFile(tempArchiveFolderPath+"\\案卷说明.xml", sb.ToString());
         }
 
         /// <summary>
@@ -138,6 +295,10 @@ namespace Xms.File
             StreamWriter sw = new StreamWriter(fs);
             sw.WriteLine(xmlContent);
             sw.Flush();
+            sw.Close();
+            fs.Close();
+            sw.Dispose();
+            fs.Dispose();
         }
 
         /// <summary>
@@ -146,21 +307,8 @@ namespace Xms.File
         /// <param name="filesDir"></param>
         public void CreateFileDirStructureXML(FilesDir filesDir)
         {
-            if (filesDir == null) return;
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("<FilesCatalog>");
-            sb.AppendLine("<FileCount>" + filesDir.FileCount + "</FileCount>");
-            sb.AppendLine("<Files>");
-            foreach(var oneFile in filesDir.Files)
-            {
-                sb.AppendLine("<File>");
-                sb.AppendLine("<Directory>" + oneFile.DirName + "</Directory>");
-                sb.AppendLine("<FilePath>" + oneFile.FilePath + "</FilePath>");
-                sb.AppendLine("</File>");
-            }
-            sb.AppendLine("</Files>");
-            sb.AppendLine("</FilesCatalog>");
-            SaveToXMLFile(tempArchiveFolderPath+"\\FilesCatalog.xml", sb.ToString());
+            string sb = XmlSerializeHelper.XmlSerialize<FilesDir>(filesDir);
+            SaveToXMLFile(tempArchiveFolderPath+"\\目录结构.xml", sb.ToString());
         }
 
         /// <summary>
@@ -170,28 +318,27 @@ namespace Xms.File
         public void CreateFileMetaXML(List<FileMetaItem> fileMetaItems)
         {
             if (fileMetaItems == null) return;
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("<FileMeta>");
-            foreach(var fileItem in fileMetaItems)
-            {
-                sb.AppendLine("<FileItem>");
-                PropertyInfo[] propertyInfos = fileItem.GetType().GetProperties();
-                foreach (var pi in propertyInfos)
-                {
-                    sb.AppendLine("<" + pi.Name + ">");
-                    sb.AppendLine(pi.GetValue(fileItem).ToString());
-                    sb.AppendLine("</" + pi.Name + ">");
-                }
-                sb.AppendLine("</FileItem>");
-
-            }
-            sb.AppendLine("</FileMeta>");
-            SaveToXMLFile(tempArchiveFolderPath+"\\fileMetaItems.xml", sb.ToString());
+            string sb = XmlSerializeHelper.XmlSerialize<List<FileMetaItem>>(fileMetaItems);
+            SaveToXMLFile(tempArchiveFolderPath+ "\\Attachments\\fileMetaItems.xml", sb.ToString());
         }
     }
 
 
     #region 生成xml实体
+    public class WorkFlowTinyInfo
+    {
+        public string HandleName { get; set; }
+
+        public string HandlerIdName { get; set; }
+
+
+        public string Description { get; set; }
+
+        public string Status { get; set; }
+
+        public DateTime processedTime { get; set; }
+
+    }
     /// <summary>
     /// 文件包说明
     /// </summary>
@@ -206,24 +353,24 @@ namespace Xms.File
         {
             get;set;
         }
+    }
 
-        public class FilePackage
-        {
-            public string size { get; set; }
-            public DateTime CreatedTime { get; set; }
-            public string CreatedBy { get; set; }
-            public string FileName { get; set; }
-        }
-        public class ArchiveItem
-        {
-            public string Claimer { get; set; }
-            public DateTime ApplicationTime { get; set; }
-            public string Department { get; set; }
-            public Decimal Amount { get; set; }
-            public string Reason { get; set; }
-            public string Title { get; set; }
-            public string Code { get; set; }
-        }
+    public class FilePackage
+    {
+        public string size { get; set; }
+        public DateTime CreatedTime { get; set; }
+        public string CreatedBy { get; set; }
+        public string FileName { get; set; }
+    }
+    public class ArchiveItem
+    {
+        public string Claimer { get; set; }
+        public DateTime ApplicationTime { get; set; }
+        public string Department { get; set; }
+        public Decimal Amount { get; set; }
+        public string Reason { get; set; }
+        public string Title { get; set; }
+        public string Code { get; set; }
     }
 
     /// <summary>
@@ -266,6 +413,8 @@ namespace Xms.File
         public decimal UnitPrice { get; set; }
 
         public decimal MoneyAmount { get; set; }
+
+        public string ArchiveNo { get; set; }
     }
     #endregion
 

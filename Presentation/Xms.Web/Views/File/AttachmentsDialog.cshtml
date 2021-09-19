@@ -139,6 +139,7 @@
                                     objectid : '@(Model.ObjectId.ToString())',
                                     disabledForm: function () {
                                         AttachmentModel.dialog.find('button').prop('disabled', true);
+                                     
                                     },
                                     resetForm: function () {
                                         AttachmentModel.dialog.find('button').prop('disabled', false);
@@ -194,8 +195,18 @@
                                     AttachmentModel.dialog.find('form').ajaxForm({
                                         success:function (response) {
                                             if (response.IsSuccess) {
+                                                //debugger;
                                                 Xms.Web.Alert(true, response.Content);
-                                                //AttachmentModel.dialog_return();
+                                                  //AJAX 回调函数里进行触发案卷进行表格数据刷新。
+                                                  //console.log("TEST!!!!! from disabledForm method!");
+                                                  //if ($("[name='searchBtn']").length > 0) {
+                                                  //  console.log("searchBtn does exisit");
+                                                  //  $("[name='searchBtn']").click(); //trigger click event.
+                                                  //}
+                                                  //else {
+                                                  //    console.log("The searchBtn element does not exist!");
+                                                  //};
+                                                  //AttachmentModel.dialog_return();
                                                 AttachmentModel.callback(response.Extra.filepath, AttachmentModel);
                                                 AttachmentModel.rebind();
                                                 AttachmentModel.dialog.find('form').resetForm();

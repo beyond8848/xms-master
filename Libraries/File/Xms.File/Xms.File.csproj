@@ -5,11 +5,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="iTextSharp" Version="5.5.13.2" />
     <PackageReference Include="System.IO.Compression" Version="4.3.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Configuration\Xms.Configuration\Xms.Configuration.csproj" />
+    <ProjectReference Include="..\..\Flow\Xms.Flow.Core\Xms.Flow.Core.csproj" />
+    <ProjectReference Include="..\..\Flow\Xms.Flow.Domain\Xms.Flow.Domain.csproj" />
     <ProjectReference Include="..\..\Module\Xms.Module.Abstractions\Xms.Module.Abstractions.csproj" />
     <ProjectReference Include="..\..\Sdk\Xms.Sdk\Xms.Sdk.csproj" />
     <ProjectReference Include="..\..\Xms.Context\Xms.Context.csproj" />

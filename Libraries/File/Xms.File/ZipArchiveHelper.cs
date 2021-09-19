@@ -5,10 +5,11 @@ using System.IO.Compression;
 using System.Linq;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using Xms.Logging.AppLog;
 
 namespace Xms.File
 {
-    public class ZipArchiveHelper
+    public class ZipArchiveHelper 
     {
 
         #region  Methods
@@ -20,7 +21,8 @@ namespace Xms.File
         /// <param name="destinationArchiveFileName">将要生成的压缩包的存档路径，可以为相对路径或绝对路径。相对路径是指相对于当前工作目录的路径。</param>
         /// <param name="compressionLevel">指示压缩操作是强调速度还是强调压缩大小的枚举值</param>
         /// <param name="includeBaseDirectory">压缩包中是否包含父目录</param>
-        public static bool CreatZip(string sourceDirectoryName, string destinationArchiveFileName, CompressionLevel compressionLevel = CompressionLevel.NoCompression, bool includeBaseDirectory = true)
+        public static  bool CreatZip(ILogService logService,string sourceDirectoryName, string destinationArchiveFileName,
+            CompressionLevel compressionLevel = CompressionLevel.NoCompression, bool includeBaseDirectory = false)
         {
             try
             {
@@ -72,9 +74,7 @@ namespace Xms.File
             }
             catch (Exception ex)
             {
-                //LogHelper.Error("Error! ", ex);
-                //MessageBox.Show(ex.StackTrace, ex.Source);
-                //UtilityHelper.ShowMessageDialog(ex.StackTrace);
+                logService.Error("The error of creating zip occurence happened", ex);
                 return false;
             }
         }
@@ -85,7 +85,7 @@ namespace Xms.File
         /// <param name="sourceDirectoryName">将要压缩存档的文件目录的路径，可以为相对路径或绝对路径。 相对路径是指相对于当前工作目录的路径。</param>
         /// <param name="destinationArchiveFileName">将要生成的压缩包的存档路径，可以为相对路径或绝对路径。 相对路径是指相对于当前工作目录的路径。</param>
         /// <param name="compressionLevel">指示压缩操作是强调速度还是强调压缩大小的枚举值</param>
-        public static bool CreatZip(Dictionary<string, string> sourceDirectoryName, string destinationArchiveFileName, CompressionLevel compressionLevel = CompressionLevel.NoCompression)
+        public static  bool CreatZip(ILogService logService, Dictionary<string, string> sourceDirectoryName, string destinationArchiveFileName, CompressionLevel compressionLevel = CompressionLevel.NoCompression)
         {
             try
             {
@@ -111,8 +111,7 @@ namespace Xms.File
             }
             catch (Exception ex)
             {
-                //LogHelper.Error("Error! ", ex);
-                //UtilityHelper.ShowMessageDialog(ex.StackTrace);
+                logService.Error("The error of creating zip occurence happened", ex);
                 return false;
             }
         }

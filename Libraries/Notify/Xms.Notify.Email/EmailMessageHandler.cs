@@ -15,7 +15,11 @@ namespace Xms.Notify.Email
 
         public object Send(NotifyBody body)
         {
+            if (body == null) return false;
             var ibody = new EmailNotifyBody(body);
+
+            if (string.IsNullOrWhiteSpace(ibody.Host) || ibody.Port==0) return false;
+
             SmtpClient smtp = new SmtpClient
             {
                 DeliveryMethod = SmtpDeliveryMethod.Network,

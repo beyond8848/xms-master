@@ -62,8 +62,12 @@ namespace Xms.Notify.Email
             foreach (var item in srcType.GetProperties())
             {
                 val = item.GetValue(src);
-                item.SetValue(des, val);
-
+                Type descType = des.GetType();
+                foreach(var pro in descType.GetProperties())
+                {
+                    if(pro.Name.Equals(item.Name))
+                    pro.SetValue(des, val);
+                }
             }
         }
     }
