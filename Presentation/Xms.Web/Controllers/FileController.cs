@@ -173,6 +173,7 @@ namespace Xms.Web.Controllers
 
         public void ConvertDotNetCoreTestObjectToXmlOCRObject(NormalInvoice normalInvoice, DotNetCoreTest.NormalInvoice normalInvoice1)
         {
+            if (normalInvoice1 == null) return;
             normalInvoice.Checker = normalInvoice1.Checker;
             normalInvoice.CheckID = normalInvoice1.CheckID;
             normalInvoice.InvoiceID = normalInvoice1.InvoiceID;

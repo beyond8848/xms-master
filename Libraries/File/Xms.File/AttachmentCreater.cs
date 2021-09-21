@@ -111,9 +111,18 @@ namespace Xms.File
                         //识别完之后，加入到发票明细表中，同时调用ajax刷新明细表页面。
                         Invoice invoice = func(savePath);
                         NormalInvoice ni = invoice.Normal;
-                        if(!IsNum(ni.PriceTaxTotal_Num))
+                        if(ni!=null &&ni.PriceTaxTotal_Num!=null && !IsNum(ni.PriceTaxTotal_Num))
                         {
                             ni.PriceTaxTotal_Num = ni.PriceTaxTotal_Num.Replace("￥", "").Replace(" ", "");
+                        }
+                        else
+                        {
+                            ni = new NormalInvoice
+                            {
+                                InvoicingDate = System.DateTime.Now.ToString(),
+                                Title = string.Empty,
+                                PriceTaxTotal_Num = "0"
+                            };
                         }
                         Entity ent2 = new Entity("ReimbursedDetail")
                        .SetIdValue(id)
