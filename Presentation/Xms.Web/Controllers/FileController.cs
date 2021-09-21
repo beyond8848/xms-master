@@ -1,9 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading.Tasks;
 using Xms.File;
 using Xms.Infrastructure.Utility;
+using Xms.OCR;
 using Xms.Schema.Attribute;
 using Xms.Schema.Entity;
 using Xms.Sdk.Extensions;
@@ -125,7 +128,11 @@ namespace Xms.Web.Controllers
             }
             if (model.Attachments.NotEmpty())
             {
-                var result = await _attachmentCreater.CreateManyAsync(model.EntityId, model.ObjectId, model.Attachments).ConfigureAwait(false);
+                Func<string,Invoice> func = (s) =>
+                {
+                    return DoOCR(s);
+                };
+                var result = await _attachmentCreater.CreateManyAsync(model.EntityId, model.ObjectId, model.Attachments, func).ConfigureAwait(false);
 
                 if (result.NotEmpty())
                 {
@@ -134,7 +141,53 @@ namespace Xms.Web.Controllers
             }
             return SaveFailure();
         }
+
+        private Invoice DoOCR(string filePath)
+        {
+            string paddleConfigFile = @"D:\OCR\PaddleOCR-release-2.1\deploy\cpp_infer\tools\config.txt";
+            DotNetCoreTest.Invoice invoiceOCR = DotNetCoreTest.StartOCR.Do(filePath, paddleConfigFile);
+            Invoice invoice = new Invoice();
+            invoice.Normal = new NormalInvoice();
+            this.ConvertDotNetCoreTestObjectToXmlOCRObject(invoice.Normal, invoiceOCR.Normal);
+            return invoice;
+        }
+
+        /// <summary>
+        /// 做OCR识别，获取电子发票相关信息
+        /// </summary>
+        /// <param name="list"></param>
+        /// <returns></returns>
+        private List<Invoice> DoOCR(List<IFormFile> list)
+        {
+            List<Invoice> invoices = new List<Invoice>();
+            string paddleConfigFile = @"D:\OCR\PaddleOCR-release-2.1\deploy\cpp_infer\tools\config.txt";
+            foreach(var file in list)
+            {
+               DotNetCoreTest.Invoice invoiceOCR = DotNetCoreTest.StartOCR.Do(file.FileName, paddleConfigFile);
+               Invoice invoice = new Invoice();
+               this.ConvertDotNetCoreTestObjectToXmlOCRObject(invoice.Normal, invoiceOCR.Normal);
+               invoices.Add(invoice);
+            }
+            return invoices;
+        }
+
+        public void ConvertDotNetCoreTestObjectToXmlOCRObject(NormalInvoice normalInvoice, DotNetCoreTest.NormalInvoice normalInvoice1)
+        {
+            normalInvoice.Checker = normalInvoice1.Checker;
+            normalInvoice.CheckID = normalInvoice1.CheckID;
+            normalInvoice.InvoiceID = normalInvoice1.InvoiceID;
+            normalInvoice.InvoiceNo = normalInvoice1.InvoiceNo;
+            normalInvoice.Invoicer = normalInvoice1.Invoicer;
+            normalInvoice.InvoicingDate = normalInvoice1.InvoicingDate;
+            normalInvoice.MachineID = normalInvoice1.MachineID;
+            normalInvoice.PriceTaxTotal_CHS = normalInvoice1.PriceTaxTotal_CHS;
+            normalInvoice.PriceTaxTotal_Num = normalInvoice1.PriceTaxTotal_Num;
+            normalInvoice.Recipient = normalInvoice1.Recipient;
+            //normalInvoice.Seller = normalInvoice1.Seller;
+            normalInvoice.Title = normalInvoice1.Title;
+        }
     }
+    
 
     [Route("{org}/file/[action]")]
     public class FileDeleterController : WebControllerBase

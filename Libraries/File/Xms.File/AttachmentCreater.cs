@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Xms.Configuration;
 using Xms.Context;
@@ -65,6 +66,114 @@ namespace Xms.File
         }
 
         /// <summary>
+        /// 验证字符串是否是数字
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        private bool IsNum(string str)
+        {
+            Regex r = new Regex(@"^[+-]?\d*(,\d{3})*(\.\d+)?$");
+            if (r.IsMatch(str))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public virtual async Task<List<Entity>> CreateManyAsync(Guid entityId, Guid objectId, List<IFormFile> files,Func<string,Invoice> func)
+        {
+            //附件
+            List<Entity> attachments = new List<Entity>();
+            List<Entity> reimbursedDetails = new List<Entity>();
+            if (files.NotEmpty())
+            {
+                for (int i = 0; i < files.Count; i++)
+                {
+                    var file = files[i];
+                    if (file.Length > 0)
+                    {
+                        string dir = _webHelper.MapPath(Path, true);
+                        Guid id = Guid.NewGuid();
+                        string fileName = id.ToString() + System.IO.Path.GetExtension(file.FileName);
+                        string savePath = dir + fileName;
+                        await file.SaveAs(savePath, _settingFinder, _webHelper).ConfigureAwait(false);
+                        Entity ent = new Entity(EntityName)
+                        .SetIdValue(id)
+                        .SetAttributeValue("name", file.FileName)
+                        .SetAttributeValue("filesize", file.Length)
+                        .SetAttributeValue("mimetype", file.ContentType)
+                        .SetAttributeValue("cdnpath", Path + fileName)
+                        .SetAttributeValue("entityid", entityId)
+                        .SetAttributeValue("objectid", objectId);
+                        attachments.Add(ent);
+
+                        //这里加上OCR识别逻辑////////////////////////////////////////////////////////////////.
+                        //识别完之后，加入到发票明细表中，同时调用ajax刷新明细表页面。
+                        Invoice invoice = func(savePath);
+                        NormalInvoice ni = invoice.Normal;
+                        if(!IsNum(ni.PriceTaxTotal_Num))
+                        {
+                            ni.PriceTaxTotal_Num = ni.PriceTaxTotal_Num.Replace("￥", "").Replace(" ", "");
+                        }
+                        Entity ent2 = new Entity("ReimbursedDetail")
+                       .SetIdValue(id)
+                       //地点 not null
+                       .SetAttributeValue("Address", "")
+                       //数量 not null
+                       .SetAttributeValue("Amount", 1)
+                       //创建者
+                       .SetAttributeValue("CreatedBy", new EntityReference("systemuser", _appContext.GetFeature<ICurrentUser>().SystemUserId))
+                       //创建日期
+                       .SetAttributeValue("CreatedOn", DateTime.Now)
+                       //结束时间 not null
+                       .SetAttributeValue("FeeEndTime", Convert.ToDateTime(ni.InvoicingDate))
+                       //开始时间 not null
+                       .SetAttributeValue("FeeStartTime",Convert.ToDateTime(ni.InvoicingDate))
+                       //金额 not null
+                       .SetAttributeValue("MoneyAmount", new Money(Convert.ToDecimal(ni.PriceTaxTotal_Num)))
+                       //名称 
+                       .SetAttributeValue("Name",ni.Title)
+                       //组织
+                       .SetAttributeValue("OrganizationId", new EntityReference("organization", _appContext.GetFeature<ICurrentUser>().OrganizationId))
+                       //所有者
+                       .SetAttributeValue("OwnerId", new OwnerObject(OwnerTypes.SystemUser, _appContext.GetFeature<ICurrentUser>().SystemUserId))
+                       //所有者类型
+                       .SetAttributeValue("OwnerIdType", 1)
+                       //所有者部门 not null
+                       .SetAttributeValue("OwningBusinessUnit", new EntityReference("businessunit", _appContext.GetFeature<ICurrentUser>().BusinessUnitId))
+                       //报销明细 主键 
+                       .SetAttributeValue("ReimbursedDetailId", System.Guid.NewGuid().ToString())
+                       //报销类型 not null
+                       .SetAttributeValue("ReimbursedType", "1")
+                       //报销单 not null
+                       .SetAttributeValue("ReimbursementId", new EntityReference("Reimbursement", objectId))
+                       //状态
+                       .SetAttributeValue("StateCode", "1")
+                       //状态描述
+                       .SetAttributeValue("StatusCode", "0")
+                       //单价 not null
+                       .SetAttributeValue("UnitFee", 1.00)
+                       .SetAttributeValue("AssociatedFilePath", savePath)
+                       .SetAttributeValue("InvoiceCode", ni.InvoiceNo)
+                       .SetAttributeValue("ArchiveNo", "");
+                        reimbursedDetails.Add(ent2);
+                        ////////////////////////////////////////////////////////////////////////////////////
+                    }
+                }
+            }
+            //保存附件
+            if (attachments.Count > 0)
+            {
+                //保存附件
+                _dataCreater.CreateMany(attachments);
+                //保存报销明细
+                _dataCreater.CreateMany(reimbursedDetails);
+                return attachments;//.Select(x=>x["cdnpath"].ToString()).ToList();
+            }
+            return null;
+        }
+
+        /// <summary>
         /// 创建多条记录
         /// </summary>
         /// <param name="entityId"></param>
@@ -100,7 +209,7 @@ namespace Xms.File
 
                         //这里加上OCR识别逻辑////////////////////////////////////////////////////////////////.
                         //识别完之后，加入到发票明细表中，同时调用ajax刷新明细表页面。
-                        //  Invoice invoice = Util.OCR_Invoice(@"D:\test\fapiao.pdf", @"F:\VS\PaddleOCR-release-2.1\config.txt", false);
+                          Invoice invoice = Util.OCR_Invoice(@"D:\test\fapiao.pdf", @"F:\VS\PaddleOCR-release-2.1\config.txt", false);
                         //NormalInvoice ins = invoice.Normal;
                         //Company cp = invoice.Company();
                         //Project pj = invoice.Project();

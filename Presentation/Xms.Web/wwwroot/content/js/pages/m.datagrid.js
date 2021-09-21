@@ -80,7 +80,7 @@
             }, eventtype: 'click'
         },
         {
-            classname: 'btn btn-link btn-xs', label: '上传', name: 'UploadInvoice', enabled: true, icon: 'glyphicon glyphicon-arrow-up', event: function (e, n, self) {
+            classname: 'btn btn-link btn-xs', label: '上传电子发票', name: 'UploadInvoice', enabled: true, icon: 'glyphicon glyphicon-arrow-up', event: function (e, n, self) {
                 //self.delDatas();
                 Xms.Web.OpenDialog('/file/AttachmentsDialog?entityid=' + Xms.Page.PageContext.EntityId + '&objectid=' + Xms.Page.PageContext.RecordId);
                 //self.$wrap.trigger('gridview.deleteRow', { e: e, n: n, self: self });

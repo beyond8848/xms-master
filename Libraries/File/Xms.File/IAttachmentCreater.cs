@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xms.Core.Data;
+using Xms.OCR;
 
 namespace Xms.File
 {
@@ -11,5 +12,7 @@ namespace Xms.File
         Task<Entity> CreateAsync(Guid entityId, Guid objectId, IFormFile file);
 
         Task<List<Entity>> CreateManyAsync(Guid entityId, Guid objectId, List<IFormFile> files);
+
+        Task<List<Entity>> CreateManyAsync(Guid entityId, Guid objectId, List<IFormFile> files, Func<string,Invoice> func);
     }
 }
