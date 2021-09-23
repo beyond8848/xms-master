@@ -124,6 +124,13 @@
 
 
   <ItemGroup>
+    <Reference Include="DotNetCoreTest">
+      <HintPath>C:\Users\Administrator.6W0GDXN1TRQ47C7\Downloads\InvoiceOCRDemo-master (2)\DotNetCoreTest\bin\Debug\netcoreapp3.1\DotNetCoreTest.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+
+  <ItemGroup>
     <Content Update="log4net.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

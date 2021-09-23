@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using Xms.Context;
@@ -70,8 +71,28 @@ namespace Xms.File
                         System.IO.File.Delete(directory); //直接删除其中的文件  
             }
             //然后，开始拷贝文件
+            int orderNo = 0;
             foreach (var file in fullPathFiles)
-                System.IO.File.Copy(file, attachmentFolderPath+"\\"+System.IO.Path.GetFileName(file));
+            {
+                orderNo++;
+                System.IO.File.Copy(file, attachmentFolderPath + "\\"+ GetFileNameBasedNameRule("",orderNo) + System.IO.Path.GetExtension(file));
+            }
+        }
+
+        private string GetFileNameBasedNameRule(string fileName,int orderNo)
+        {
+            string fileCompletedName = string.Empty;
+            if(!string.IsNullOrWhiteSpace(fileName))
+            {
+                //fileCompletedName = fileName;
+                fileCompletedName = fileName + "-" + orderNo.ToString().PadLeft(4, '0');
+            }
+            else
+            {
+                fileCompletedName = orderNo.ToString().PadLeft(4, '0');
+            }
+
+            return fileCompletedName;
         }
 
         /// <summary>
@@ -100,6 +121,11 @@ namespace Xms.File
 
                 //设定压缩包文件名。
                 string destinationZipFilePath = System.AppDomain.CurrentDomain.BaseDirectory + @"_tempZip\" + archiveNO + ".zip";
+
+                //构建文件目录结构xml文件
+                List<FileInfo> files = this. GetAllFilesByDir(tempArchiveFolderPath);
+                CenerateFileDirectoryStructure(files);
+
                 //压缩文件，生成ASIP整个数据包。
                 ZipArchiveHelper.CreatZip(_logService, tempArchiveFolderPath, destinationZipFilePath, CompressionLevel.Fastest);
 
@@ -127,16 +153,20 @@ namespace Xms.File
         /// <returns></returns>
         private List<string> GetPDFFiles(string objectId)
         {
-            var query = new QueryExpression("Attachment", _appContext.GetFeature<ICurrentUser>().UserSettings.LanguageId);
-            query.ColumnSet.AddColumns("cdnpath");
-            query.Criteria.AddCondition("ObjectId", ConditionOperator.Equal, objectId);
+            //var query = new QueryExpression("Attachment", _appContext.GetFeature<ICurrentUser>().UserSettings.LanguageId);
+            //query.ColumnSet.AddColumns("cdnpath");
+            //query.Criteria.AddCondition("ObjectId", ConditionOperator.Equal, objectId);
+            //List<Entity> subEntities = _dataFinder.RetrieveAll(query);
+            //string baseDir = System.AppDomain.CurrentDomain.BaseDirectory;
+            var query = new QueryExpression("ReimbursedDetail", _appContext.GetFeature<ICurrentUser>().UserSettings.LanguageId);
+            query.ColumnSet.AddColumns("AssociatedFilePath");
+            query.Criteria.AddCondition("ReimbursementId", ConditionOperator.Equal, objectId);
             List<Entity> subEntities = _dataFinder.RetrieveAll(query);
-            string baseDir = System.AppDomain.CurrentDomain.BaseDirectory;
             List<string> files = new List<string>();
             string filePath = string.Empty;
             foreach (var entity in subEntities)
             {
-                filePath = baseDir + "\\..\\..\\..\\" + entity.GetStringValueExtension("cdnpath");
+                filePath = entity.GetStringValueExtension("AssociatedFilePath");
                 if(System.IO.File.Exists(filePath))
                 files.Add(filePath);
             }
@@ -210,6 +240,28 @@ namespace Xms.File
             return statusDesc;
         }
 
+        public void CenerateFileDirectoryStructure(List<FileInfo> fileInfos)
+        {
+            FilesDir filesDir = new FilesDir
+            {
+                FileCount = fileInfos.Count,
+                Files = new List<OneFileDir>()
+            };
+
+            foreach(var fileinfo in fileInfos)
+            {
+                filesDir.Files.Add(
+                     new OneFileDir
+                     {
+                         DirName = fileinfo.DirectoryName,
+                         FilePath = fileinfo.FullName
+                     }
+                    );
+            }
+
+            CreateFileDirStructureXML(filesDir);
+        }
+
         /// <summary>
         /// 生成文件包说明文件，目录信息文件和发票文件。
         /// </summary>
@@ -224,9 +276,20 @@ namespace Xms.File
             {
                 strArchiveNo = mainEntity.GetStringValueExtension("ClaimNo");
                 var query = new QueryExpression(subEntityName, _appContext.GetFeature<ICurrentUser>().UserSettings.LanguageId);
-                query.ColumnSet.AddColumns("attachmentid", "cdnpath");
+                query.ColumnSet.AllColumns = true;
                 query.Criteria.AddCondition("ReimbursementId", ConditionOperator.Equal, entityId);
                 List<Entity> subEntities = _dataFinder.RetrieveAll(query);
+                string departmentName = string.Empty;
+                string departmentGuid = mainEntity.GetStringValueExtension("Department");
+                if(!string.IsNullOrWhiteSpace(departmentGuid))
+                {
+                    Entity entity = _dataFinder.RetrieveById("BusinessUnit", new Guid(departmentGuid));
+                    if(entity!=null)
+                    {
+                        departmentName = entity.GetStringValueExtension("Name");
+                    }
+                }
+                
                 ArchiveInstructions archiveInstructions = new ArchiveInstructions
                 {
                     ArchiveItemInstance = new ArchiveItem
@@ -235,7 +298,7 @@ namespace Xms.File
                         Amount =  mainEntity.GetDecimalValueExtension("MoneyAmount"),
                         ApplicationTime = mainEntity.GetDateValueExtension("Claimtime"),
                         Code = mainEntity.GetStringValueExtension("ClaimNo"),
-                        Department = mainEntity.GetStringValueExtension("Department"),
+                        Department = departmentName,
                         Reason = mainEntity.GetStringValueExtension("reason"),
                         Title = mainEntity.GetStringValueExtension("name")
                     },
@@ -249,9 +312,11 @@ namespace Xms.File
                 this.CreateArchiveInstructionsXML(archiveInstructions);
                 if(subEntities!=null && subEntities.Count>0)
                 {
-                    List<FileMetaItem> fileMetaItems = new List<FileMetaItem>();
+                    //List<FileMetaItem> fileMetaItems = new List<FileMetaItem>();
+                    int orderNo = 0;
                     foreach(var subEntity in subEntities)
                     {
+                        orderNo++;
                         FileMetaItem fileMetaItem = new FileMetaItem
                         {
                             Address = subEntity.GetStringValueExtension("Address"),
@@ -261,11 +326,15 @@ namespace Xms.File
                             MoneyAmount = subEntity.GetIntValueExtension("MoneyAmount"),
                             StartTime = subEntity.GetDateValueExtension("FeeStartTime"),
                             EndTime = subEntity.GetDateValueExtension("FeeEndTime"),
-                            UnitPrice = subEntity.GetDecimalValueExtension("UnitFee")
+                            UnitPrice = subEntity.GetDecimalValueExtension("UnitFee"),
+                            InvoiceCode = subEntity.GetStringValueExtension("InvoiceCode"),
+                            ArchiveNo = subEntity.GetStringValueExtension("ArchiveNo"),
+                            FilePath = subEntity.GetStringValueExtension("AssociatedFilePath")
                         };
-                        fileMetaItems.Add(fileMetaItem);
+                        this.CreateSingleFileMetaXML(fileMetaItem, GetFileNameBasedNameRule("", orderNo));
+                        //fileMetaItems.Add(fileMetaItem);
                     }
-                    this.CreateFileMetaXML(fileMetaItems);
+                    //this.CreateFileMetaXML(fileMetaItems);
                 }
             }
             return strArchiveNo;
@@ -311,6 +380,14 @@ namespace Xms.File
             SaveToXMLFile(tempArchiveFolderPath+"\\目录结构.xml", sb.ToString());
         }
 
+
+        public void CreateSingleFileMetaXML(FileMetaItem fileMetaItem,string fileName)
+        {
+            if (fileMetaItem == null) return;
+            string sb = XmlSerializeHelper.XmlSerialize<FileMetaItem>(fileMetaItem);
+            SaveToXMLFile(tempArchiveFolderPath + "\\Attachments\\"+fileName+".xml", sb.ToString());
+        }
+
         /// <summary>
         /// 创建文件元数据
         /// </summary>
@@ -320,6 +397,51 @@ namespace Xms.File
             if (fileMetaItems == null) return;
             string sb = XmlSerializeHelper.XmlSerialize<List<FileMetaItem>>(fileMetaItems);
             SaveToXMLFile(tempArchiveFolderPath+ "\\Attachments\\fileMetaItems.xml", sb.ToString());
+        }
+
+        // <summary>
+        /// 获得指定目录下的所有文件
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public List<FileInfo> GetFilesByDir(string path)
+        {
+            DirectoryInfo di = new DirectoryInfo(path);
+
+            //找到该目录下的文件
+            FileInfo[] fi = di.GetFiles();
+
+            //把FileInfo[]数组转换为List
+            List<FileInfo> list = fi.ToList<FileInfo>();
+            return list;
+        }
+
+        /// <summary>
+        /// 获得指定目录及其子目录的所有文件
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public List<FileInfo> GetAllFilesByDir(string path)
+        {
+            DirectoryInfo dir = new DirectoryInfo(path);
+
+            //找到该目录下的文件
+            FileInfo[] fi = dir.GetFiles();
+
+            //把FileInfo[]数组转换为List
+            List<FileInfo> list = fi.ToList<FileInfo>();
+
+            //找到该目录下的所有目录里的文件
+            DirectoryInfo[] subDir = dir.GetDirectories();
+            foreach (DirectoryInfo d in subDir)
+            {
+                List<FileInfo> subList = GetFilesByDir(d.FullName);
+                foreach (FileInfo subFile in subList)
+                {
+                    list.Add(subFile);
+                }
+            }
+            return list;
         }
     }
 
@@ -380,7 +502,7 @@ namespace Xms.File
     {
         public int FileCount { get; set; }
 
-        public  List<OneFileDir> Files { get; set; }
+        public List<OneFileDir> Files { get; set; }
     }
 
     /// <summary>
@@ -414,7 +536,11 @@ namespace Xms.File
 
         public decimal MoneyAmount { get; set; }
 
+        public string FilePath { get; set; }
+
         public string ArchiveNo { get; set; }
+
+        public string InvoiceCode { get; set; }
     }
     #endregion
 

@@ -9,7 +9,7 @@ namespace Xms.File
     /// </summary>
     public class AttachmentService
     {
-        private readonly IAppContext _appContext;
+        public readonly IAppContext _appContext;
 
         public AttachmentService(IAppContext appContext)
         {
