@@ -144,7 +144,7 @@ namespace Xms.File
                        .SetAttributeValue("UnitFee", "")
                        //时间戳
                        .SetAttributeValue("VersionNumber", "");
-                        _dataCreater.Create(ent2);
+                       // _dataCreater.Create(ent2);
                         ////////////////////////////////////////////////////////////////////////////////////
                     }
                 }

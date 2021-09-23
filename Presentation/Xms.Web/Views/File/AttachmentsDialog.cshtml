@@ -70,6 +70,9 @@
                                 </div>
                             </form>
                         </div>
+                        <div class="progress progress-striped hidden" id="div-progress">
+                            <div class="progress-bar progress-bar-success" id="probar" style="width:0%">0%</div>
+                        </div>
                     </div>
                     <div class="tab-pane in active" id="listPane">
                         <div class="table-responsive" id="gridview">
@@ -144,7 +147,7 @@
                                     objectid : '@(Model.ObjectId.ToString())',
                                     disabledForm: function () {
                                         AttachmentModel.dialog.find('button').prop('disabled', true);
-                                     
+
                                     },
                                     resetForm: function () {
                                         AttachmentModel.dialog.find('button').prop('disabled', false);
@@ -172,6 +175,24 @@
                                         });
                                     },
                                     submit: function () {
+                                        // startProgerss();
+                                        $("#div-progress").attr("class", "progress progress-striped");
+                                       var sum = 0;
+                                        $.fn.addprofun = function () {
+                                            var add = Math.floor(Math.random() * 10);
+                                            //var add = 10;
+                                            sum += add;
+                                            if (sum > 100)
+                                                sum = 100;
+                                            $("#probar").css("width", sum + "%");
+                                            $("#probar").text(sum + "%");
+                                            if (sum == 100) {
+                                                clearInterval(addpro);
+                                                //这里设置800延迟是因为进度条加载到100需要时间，如果不进行延迟会出现：已经显示加载完成，而进度条还没有加载完毕
+                                                window.setTimeout(function () { $("#probar").text("保存完成"); }, 800);
+                                            }
+                                        };
+                                        var addpro = window.setInterval($.fn.addprofun, 500);
                                         AttachmentModel.disabledForm();
                                         AttachmentModel.dialog.find('form').submit();
                                     },

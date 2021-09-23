@@ -151,11 +151,11 @@ namespace Xms.Web.Controllers
         [Description("删除附件")]
         public IActionResult Delete([FromBody]DeleteAttachmentModel model)
         {
-            if (model.EntityId.Equals(Guid.Empty) || model.ObjectId.Equals(Guid.Empty))
+            if (model.EntityId.Equals(Guid.Empty) || model.ObjectId.Equals(Guid.Empty)||model.RecordId[0].Equals(Guid.Empty))
             {
                 return JError(T["parameter_error"]);
             }
-            var flag = _attachmentDeleter.DeleteById(model.EntityId, model.ObjectId);
+            var flag = _attachmentDeleter.DeleteById(model.RecordId[0]);
             return flag.DeleteResult(T);
         }
     }
