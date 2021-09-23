@@ -276,9 +276,20 @@ namespace Xms.File
             {
                 strArchiveNo = mainEntity.GetStringValueExtension("ClaimNo");
                 var query = new QueryExpression(subEntityName, _appContext.GetFeature<ICurrentUser>().UserSettings.LanguageId);
-                query.ColumnSet.AddColumns("attachmentid", "cdnpath");
+                query.ColumnSet.AllColumns = true;
                 query.Criteria.AddCondition("ReimbursementId", ConditionOperator.Equal, entityId);
                 List<Entity> subEntities = _dataFinder.RetrieveAll(query);
+                string departmentName = string.Empty;
+                string departmentGuid = mainEntity.GetStringValueExtension("Department");
+                if(!string.IsNullOrWhiteSpace(departmentGuid))
+                {
+                    Entity entity = _dataFinder.RetrieveById("BusinessUnit", new Guid(departmentGuid));
+                    if(entity!=null)
+                    {
+                        departmentName = entity.GetStringValueExtension("Name");
+                    }
+                }
+                
                 ArchiveInstructions archiveInstructions = new ArchiveInstructions
                 {
                     ArchiveItemInstance = new ArchiveItem
@@ -287,7 +298,7 @@ namespace Xms.File
                         Amount =  mainEntity.GetDecimalValueExtension("MoneyAmount"),
                         ApplicationTime = mainEntity.GetDateValueExtension("Claimtime"),
                         Code = mainEntity.GetStringValueExtension("ClaimNo"),
-                        Department = mainEntity.GetStringValueExtension("Department"),
+                        Department = departmentName,
                         Reason = mainEntity.GetStringValueExtension("reason"),
                         Title = mainEntity.GetStringValueExtension("name")
                     },
@@ -301,7 +312,7 @@ namespace Xms.File
                 this.CreateArchiveInstructionsXML(archiveInstructions);
                 if(subEntities!=null && subEntities.Count>0)
                 {
-                    List<FileMetaItem> fileMetaItems = new List<FileMetaItem>();
+                    //List<FileMetaItem> fileMetaItems = new List<FileMetaItem>();
                     int orderNo = 0;
                     foreach(var subEntity in subEntities)
                     {
@@ -316,12 +327,14 @@ namespace Xms.File
                             StartTime = subEntity.GetDateValueExtension("FeeStartTime"),
                             EndTime = subEntity.GetDateValueExtension("FeeEndTime"),
                             UnitPrice = subEntity.GetDecimalValueExtension("UnitFee"),
-                            InvoiceCode = subEntity.GetStringValueExtension("InvoiceCode")
+                            InvoiceCode = subEntity.GetStringValueExtension("InvoiceCode"),
+                            ArchiveNo = subEntity.GetStringValueExtension("ArchiveNo"),
+                            FilePath = subEntity.GetStringValueExtension("AssociatedFilePath")
                         };
                         this.CreateSingleFileMetaXML(fileMetaItem, GetFileNameBasedNameRule("", orderNo));
-                        fileMetaItems.Add(fileMetaItem);
+                        //fileMetaItems.Add(fileMetaItem);
                     }
-                    this.CreateFileMetaXML(fileMetaItems);
+                    //this.CreateFileMetaXML(fileMetaItems);
                 }
             }
             return strArchiveNo;
@@ -489,7 +502,7 @@ namespace Xms.File
     {
         public int FileCount { get; set; }
 
-        public  List<OneFileDir> Files { get; set; }
+        public List<OneFileDir> Files { get; set; }
     }
 
     /// <summary>
@@ -522,6 +535,8 @@ namespace Xms.File
         public decimal UnitPrice { get; set; }
 
         public decimal MoneyAmount { get; set; }
+
+        public string FilePath { get; set; }
 
         public string ArchiveNo { get; set; }
 
