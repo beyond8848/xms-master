@@ -260,6 +260,10 @@
         Xms.Page.PageContext.WorkFlowEnabled = @(Model.EntityMetaData.WorkFlowEnabled ? "true":"false");
         Xms.Page.PageContext.BusinessFlowEnabled = @(Model.EntityMetaData.BusinessFlowEnabled ? "true":"false");
         Xms.Page.PageContext.BusinessFlowInstanceId = @Html.Raw(!Model.BusinessFlowInstanceId.Equals(Guid.Empty)? "'"+Model.BusinessFlowInstanceId.ToString()+"'":"null");
+        Xms.Page.PageContext.CurrentUserId = '@Model.CurrentUserId';
+        Xms.Page.PageContext.CurrentUserName = '@Model.CurrentUserName';
+        Xms.Page.PageContext.CurrentUserBussinessUnitId = '@Model.CurrentUserBussinessUnitId';
+        Xms.Page.PageContext.CurrentUserBussinessUnitName = '@Model.CurrentUserBussinessUnitName';
         Xms.Page.PageContext.Scope = 'form';
         Xms.Page.Form.MetaData = _form;
         Xms.Page.Form.HasBasePermission = @(Model.HasBasePermission ? "true":"false");

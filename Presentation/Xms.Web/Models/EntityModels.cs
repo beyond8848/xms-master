@@ -168,6 +168,13 @@ namespace Xms.Web.Models
         public Guid StageId { get; set; }
         public Guid BusinessFlowId { get; set; }
         public Guid BusinessFlowInstanceId { get; set; }
+
+       
+        ///*****************8****** 增加当前用户信息*******************8**
+        public Guid CurrentUserId { get; set; }
+        public string CurrentUserName { get; set; }
+        public Guid CurrentUserBussinessUnitId { get; set; }
+        public string CurrentUserBussinessUnitName { get; set; }
     }
 
     public class SetEntityRecordStateModel

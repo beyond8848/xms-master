@@ -82,6 +82,15 @@
         {
             classname: 'btn btn-link btn-xs', label: '上传电子发票', name: 'UploadInvoice', enabled: true, icon: 'glyphicon glyphicon-arrow-up', event: function (e, n, self) {
                 //self.delDatas();
+                if (Xms.Page.PageContext.RecordId == null || Xms.Page.PageContext.RecordId.length == 0) {
+                    Xms.Web.Toast("请先保存报销基本信息，再上传电子发票！", 'error');
+                    return;
+                }
+                //var aObject = $("a[title='保存']");
+                //if (aObject.length>0)
+                //{
+                //    aObject.click();
+                //}
                 Xms.Web.OpenDialog('/file/AttachmentsDialog?entityid=' + Xms.Page.PageContext.EntityId + '&objectid=' + Xms.Page.PageContext.RecordId);
                 //self.$wrap.trigger('gridview.deleteRow', { e: e, n: n, self: self });
                 //Need to reload data grid via invoking loadDataGrid method.

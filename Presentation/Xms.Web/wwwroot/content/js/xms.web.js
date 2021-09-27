@@ -5,6 +5,7 @@ if (typeof (Xms) == "undefined") { Xms = { __namespace: true }; }
 //Xms.Web = function () { };
 Xms.Web = {
     Loader: function (_context) {
+        //debugger;
         var self = this;
         self.loader = jQuery('<div id="loader" class="ajax-backdrop fade in"><div class="ajax-loading">' + LOC_DATA_LOADING + '</div></div>')
             .appendTo(_context)
@@ -20,6 +21,7 @@ Xms.Web = {
         });
     }
     , Loading: function () {
+        //debugger;
         var loader = jQuery('<div id="loader" class="ajax-backdrop fade in"><div class="ajax-loading">' + LOC_DATA_LOADING + '</div></div>')
             .appendTo("body")
             .hide();

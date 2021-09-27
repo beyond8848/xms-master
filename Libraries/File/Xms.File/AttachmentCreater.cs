@@ -117,12 +117,12 @@ namespace Xms.File
                         }
                         else
                         {
-                            ni = new NormalInvoice
-                            {
-                                InvoicingDate = System.DateTime.Now.ToString(),
-                                Title = string.Empty,
-                                PriceTaxTotal_Num = "0"
-                            };
+                            //ni = new NormalInvoice
+                            //{
+                            //    InvoicingDate = System.DateTime.Now.ToString(),
+                            //    Title = string.Empty,
+                            //    PriceTaxTotal_Num = "0"
+                            //};
                         }
                         Entity ent2 = new Entity("ReimbursedDetail")
                        .SetIdValue(id)

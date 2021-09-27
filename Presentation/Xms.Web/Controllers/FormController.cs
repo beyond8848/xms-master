@@ -14,6 +14,7 @@ using Xms.Form;
 using Xms.Form.Abstractions;
 using Xms.Form.Abstractions.Component;
 using Xms.Form.Domain;
+using Xms.Identity;
 using Xms.Infrastructure.Utility;
 using Xms.RibbonButton;
 using Xms.RibbonButton.Abstractions;
@@ -102,7 +103,11 @@ namespace Xms.Web.Controllers
                 EntityMetaData = entity,
                 EntityId = args.EntityId,
                 RelationShipName = args.RelationShipName,
-                ReferencedRecordId = args.ReferencedRecordId
+                ReferencedRecordId = args.ReferencedRecordId,
+                CurrentUserId = WebContext.GetFeature<ICurrentUser>().SystemUserId,
+                CurrentUserName = this.WebContext.GetFeature<ICurrentUser>().UserName,
+                CurrentUserBussinessUnitId = this.WebContext.GetFeature<ICurrentUser>().BusinessUnitId,
+                CurrentUserBussinessUnitName = this.WebContext.GetFeature<ICurrentUser>().BusinessUnitIdName
             };
 
             if (args.RecordId.HasValue && !args.RecordId.Value.Equals(Guid.Empty))

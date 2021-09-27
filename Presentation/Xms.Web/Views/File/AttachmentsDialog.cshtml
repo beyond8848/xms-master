@@ -172,6 +172,11 @@
                                         });
                                     },
                                     submit: function () {
+                                        //debugger;
+                                        if ($('#loader').length > 0) {
+                                            $('#loader').children('div').text('上传文件及OCR识别中，请稍等待...');
+                                            $('#loader').children('div').css('width', 358);
+                                        }
                                         AttachmentModel.disabledForm();
                                         AttachmentModel.dialog.find('form').submit();
                                     },
@@ -200,7 +205,7 @@
                                     AttachmentModel.dialog.find('form').ajaxForm({
                                         success:function (response) {
                                             if (response.IsSuccess) {
-                                                //debugger;
+                                                debugger;
                                                 Xms.Web.Alert(true, response.Content);
                                                   //AJAX 回调函数里进行触发案卷进行表格数据刷新。
                                                   //console.log("TEST!!!!! from disabledForm method!");
@@ -212,6 +217,10 @@
                                                   //    console.log("The searchBtn element does not exist!");
                                                   //};
                                                   //AttachmentModel.dialog_return();
+                                                if ($('#loader').length > 0) {
+                                                    $('#loader').children('div').text('加载数据中...');
+                                                    $('#loader').children('div').css('width', 160);
+                                                }
                                                 AttachmentModel.callback(response.Extra.filepath, AttachmentModel);
                                                 AttachmentModel.rebind();
                                                 AttachmentModel.dialog.find('form').resetForm();
