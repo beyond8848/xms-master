@@ -58,7 +58,7 @@ namespace Xms.File
         /// <param name="entityId">关联实体id</param>
         /// <param name="objectId">关联记录id</param>
         /// <returns></returns>
-        public virtual bool DeleteById(Guid entityId, Guid objectId)
+        public virtual bool DeleteById(Guid entityId, Guid objectId,Guid[] recordIds)
         {
             //查询
             var query = new QueryExpression("attachment", _appContext.GetFeature<ICurrentUser>().UserSettings.LanguageId);
@@ -69,7 +69,7 @@ namespace Xms.File
             var result = false;
             if (entities.NotEmpty())
             {
-                result = _dataDeleter.Delete("attachment", entities.Select(x => x.GetIdValue()).ToList());
+                result = _dataDeleter.Delete("attachment", recordIds);
                 if (result)
                 {
                     //delete files

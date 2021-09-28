@@ -209,7 +209,7 @@ namespace Xms.Web.Controllers
             {
                 return JError(T["parameter_error"]);
             }
-            var flag = _attachmentDeleter.DeleteById(model.EntityId, model.ObjectId);
+            var flag = _attachmentDeleter.DeleteById(model.EntityId, model.ObjectId,model.RecordId);
             return flag.DeleteResult(T);
         }
     }
