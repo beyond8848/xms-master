@@ -11,6 +11,7 @@ using Xms.Identity;
 using Xms.Infrastructure.Utility;
 using Xms.OCR;
 using Xms.Sdk.Abstractions;
+using Xms.Sdk.Abstractions.Query;
 using Xms.Sdk.Client;
 
 namespace Xms.File
@@ -23,16 +24,19 @@ namespace Xms.File
         private readonly IDataCreater _dataCreater;
         private readonly IWebHelper _webHelper;
         private readonly ISettingFinder _settingFinder;
+        private readonly IDataFinder _dataFinder;
 
         public AttachmentCreater(IAppContext appContext
             , IDataCreater dataCreater
             , IWebHelper webHelper
+            , IDataFinder dataFinder
             , ISettingFinder settingFinder)
             : base(appContext)
         {
             _dataCreater = dataCreater;
             _webHelper = webHelper;
             _settingFinder = settingFinder;
+            _dataFinder = dataFinder;
         }
 
         /// <summary>
@@ -80,7 +84,7 @@ namespace Xms.File
             return false;
         }
 
-        public virtual async Task<List<Entity>> CreateManyAsync(Guid entityId, Guid objectId, List<IFormFile> files,Func<string,Invoice> func)
+        public virtual async Task<List<Entity>> CreateManyAsync(Guid entityId, Guid objectId, List<IFormFile> files,Func<string,Invoice> func,Func<string,string> func1)
         {
             //附件
             List<Entity> attachments = new List<Entity>();
@@ -111,6 +115,14 @@ namespace Xms.File
                         //识别完之后，加入到发票明细表中，同时调用ajax刷新明细表页面。
                         Invoice invoice = func(savePath);
                         NormalInvoice ni = invoice.Normal;
+                        
+                        //if(this.VerifyInvoiceNoExisits(ni.InvoiceNo))
+                        //{
+                        //    string errorInfo = "改发票号码:" + ni.InvoiceNo + "已经存在或者已报销过！";
+                        //    func1(errorInfo);
+                        //    continue;
+                        //}
+
                         if(ni!=null &&ni.PriceTaxTotal_Num!=null && !IsNum(ni.PriceTaxTotal_Num))
                         {
                             ni.PriceTaxTotal_Num = ni.PriceTaxTotal_Num.Replace("￥", "").Replace(" ", "");
@@ -171,7 +183,7 @@ namespace Xms.File
                 }
             }
             //保存附件
-            if (attachments.Count > 0)
+            if (attachments.Count > 0&&reimbursedDetails.Count>0)
             {
                 //保存附件
                 _dataCreater.CreateMany(attachments);
@@ -180,6 +192,19 @@ namespace Xms.File
                 return attachments;//.Select(x=>x["cdnpath"].ToString()).ToList();
             }
             return null;
+        }
+
+        public bool VerifyInvoiceNoExisits(string invoiceNo)
+        {
+            var query = new QueryExpression("ReimbursedDetail", _appContext.GetFeature<ICurrentUser>().UserSettings.LanguageId);
+            query.ColumnSet.AddColumns("ReimbursedDetailId");
+            query.Criteria.AddCondition("InvoiceCode", ConditionOperator.Equal, invoiceNo);
+            bool isExisits = false;
+            if(_dataFinder.Retrieve(query,true)!=null)
+            {
+                isExisits = true;
+            }
+            return isExisits;
         }
 
         /// <summary>
