@@ -163,7 +163,7 @@ namespace Xms.File
                        //所有者部门 not null
                        .SetAttributeValue("OwningBusinessUnit", new EntityReference("businessunit", _appContext.GetFeature<ICurrentUser>().BusinessUnitId))
                        //报销明细 主键 
-                       .SetAttributeValue("ReimbursedDetailId", System.Guid.NewGuid().ToString())
+                       //.SetAttributeValue("ReimbursedDetailId", System.Guid.NewGuid().ToString())
                        //报销类型 not null
                        .SetAttributeValue("ReimbursedType", "1")
                        //报销单 not null

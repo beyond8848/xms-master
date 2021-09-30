@@ -72,6 +72,8 @@ namespace Xms.File
                 result = _dataDeleter.Delete("attachment", recordIds);
                 if (result)
                 {
+                    //同时删除报销明细里的
+                    _dataDeleter.Delete("ReimbursedDetail", recordIds); //附件明细表的主键值与报销明细表里的主键值相同。
                     //delete files
                     foreach (var item in entities)
                     {
