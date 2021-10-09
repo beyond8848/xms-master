@@ -14,6 +14,7 @@ namespace Xms.File
     using Xms.Flow.Abstractions;
     using Xms.Flow.Domain;
     using Xms.Logging.AppLog;
+    using Xms.Sdk.Abstractions.Query;
 
     public class PDFCreator<T>
     {
@@ -76,6 +77,8 @@ namespace Xms.File
             return filePath;
         }
 
+       
+
         /// <summary>
         /// 生成流程明细PDF文件
         /// </summary>
@@ -84,7 +87,7 @@ namespace Xms.File
         /// <param name="items">流程明细条目</param>
         /// <param name="floats">表格宽度每列宽度</param>
         /// <returns></returns>
-        public string CreateWorkFlowPDFForMultipleWorkFlowInsance(ILogService logService ,string filePath, List<WorkFlowInstance> items)
+        public string CreateWorkFlowPDFForMultipleWorkFlowInsance(ILogService logService ,string filePath, List<WorkFlowInstance> items,Func<Guid,string> func)
         {
             try
             {
@@ -116,7 +119,7 @@ namespace Xms.File
                         {
                             Description = workflowinfo.Description,
                             HandleName = workflowinfo.Name,
-                            HandlerIdName = workflowinfo.HandlerIdName,
+                            HandlerIdName = func(workflowinfo.HandlerId),
                             Status = GetStatusDesc(workflowinfo.StateCode),
                             processedTime = workflowinfo.HandleTime.Value
                         };

@@ -53,7 +53,10 @@ namespace Xms.Organization
 
         public bool IsValidePassword(string inputPassword, string salt, string password)
         {
-            return SecurityHelper.MD5(inputPassword + salt).IsCaseInsensitiveEqual(password);
+            if (!string.IsNullOrWhiteSpace(salt))
+                return SecurityHelper.MD5(inputPassword + salt).IsCaseInsensitiveEqual(password);
+            else
+                return inputPassword.IsCaseInsensitiveEqual(password);
         }
 
         public SystemUser FindById(Guid id)

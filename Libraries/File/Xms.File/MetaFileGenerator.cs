@@ -184,6 +184,21 @@ namespace Xms.File
             return files;
         }
 
+        public string GetUserNameByUserGuid(Guid userGuid)
+        {
+            var query = new QueryExpression("SystemUser", _appContext.GetFeature<ICurrentUser>().UserSettings.LanguageId);
+            query.ColumnSet.AddColumns("Name");
+            query.Criteria.AddCondition("SystemUserId", ConditionOperator.Equal, userGuid);
+            Entity entity = _dataFinder.Retrieve(query, true);
+            string userName = string.Empty;
+            if (entity != null)
+            {
+                userName = entity.GetStringValueExtension("Name");
+            }
+            return userName;
+        }
+
+
         public void CreateRebursmentCertify(ILogService logService, ArchiveItem archiveItem)
         {
             PDFCreator<ArchiveItem> pDFCreator = new PDFCreator<ArchiveItem>();
@@ -197,7 +212,13 @@ namespace Xms.File
         public void CreateWorkFlowPDFWithMultipleInstance(ILogService _logService,List<WorkFlowInstance> workflowInstances)
         {
             PDFCreator<WorkFlowTinyInfo> pDFCreator = new PDFCreator<WorkFlowTinyInfo>();
-            pDFCreator.CreateWorkFlowPDFForMultipleWorkFlowInsance(_logService,workflowPDFFilePath, workflowInstances);
+
+            Func<Guid, string> func = (s) =>
+             {
+                 return GetUserNameByUserGuid(s);
+             };
+
+            pDFCreator.CreateWorkFlowPDFForMultipleWorkFlowInsance(_logService,workflowPDFFilePath, workflowInstances,func);
         }
 
         /// <summary>
