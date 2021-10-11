@@ -70,9 +70,6 @@
                                 </div>
                             </form>
                         </div>
-                        <div class="progress progress-striped hidden" id="div-progress">
-                            <div class="progress-bar progress-bar-success" id="probar" style="width:0%">0%</div>
-                        </div>
                     </div>
                     <div class="tab-pane in active" id="listPane">
                         <div class="table-responsive" id="gridview">
@@ -147,7 +144,7 @@
                                     objectid : '@(Model.ObjectId.ToString())',
                                     disabledForm: function () {
                                         AttachmentModel.dialog.find('button').prop('disabled', true);
-
+                                     
                                     },
                                     resetForm: function () {
                                         AttachmentModel.dialog.find('button').prop('disabled', false);
@@ -175,24 +172,11 @@
                                         });
                                     },
                                     submit: function () {
-                                        // startProgerss();
-                                        $("#div-progress").attr("class", "progress progress-striped");
-                                       var sum = 0;
-                                        $.fn.addprofun = function () {
-                                            var add = Math.floor(Math.random() * 10);
-                                            //var add = 10;
-                                            sum += add;
-                                            if (sum > 100)
-                                                sum = 100;
-                                            $("#probar").css("width", sum + "%");
-                                            $("#probar").text(sum + "%");
-                                            if (sum == 100) {
-                                                clearInterval(addpro);
-                                                //这里设置800延迟是因为进度条加载到100需要时间，如果不进行延迟会出现：已经显示加载完成，而进度条还没有加载完毕
-                                                window.setTimeout(function () { $("#probar").text("保存完成"); }, 800);
-                                            }
-                                        };
-                                        var addpro = window.setInterval($.fn.addprofun, 500);
+                                        //debugger;
+                                        if ($('#loader').length > 0) {
+                                            $('#loader').children('div').text('上传文件及OCR识别中，请稍等待...');
+                                            $('#loader').children('div').css('width', 358);
+                                        }
                                         AttachmentModel.disabledForm();
                                         AttachmentModel.dialog.find('form').submit();
                                     },
@@ -221,7 +205,7 @@
                                     AttachmentModel.dialog.find('form').ajaxForm({
                                         success:function (response) {
                                             if (response.IsSuccess) {
-                                                //debugger;
+                                                debugger;
                                                 Xms.Web.Alert(true, response.Content);
                                                   //AJAX 回调函数里进行触发案卷进行表格数据刷新。
                                                   //console.log("TEST!!!!! from disabledForm method!");
@@ -233,6 +217,10 @@
                                                   //    console.log("The searchBtn element does not exist!");
                                                   //};
                                                   //AttachmentModel.dialog_return();
+                                                if ($('#loader').length > 0) {
+                                                    $('#loader').children('div').text('加载数据中...');
+                                                    $('#loader').children('div').css('width', 160);
+                                                }
                                                 AttachmentModel.callback(response.Extra.filepath, AttachmentModel);
                                                 AttachmentModel.rebind();
                                                 AttachmentModel.dialog.find('form').resetForm();

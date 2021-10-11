@@ -14,6 +14,7 @@ namespace Xms.File
     using Xms.Flow.Abstractions;
     using Xms.Flow.Domain;
     using Xms.Logging.AppLog;
+    using Xms.Sdk.Abstractions.Query;
 
     public class PDFCreator<T>
     {
@@ -24,7 +25,9 @@ namespace Xms.File
         private static BaseFont bfCHN = BaseFont.CreateFont(fontdb, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
 
         //宋体标题-深灰色
-        private static Font fontTitle = new Font(bfCHN, (float)10, 1, BaseColor.DARK_GRAY);
+        private static Font fontTitle = new Font(bfCHN, (float)20, 1, BaseColor.DARK_GRAY);
+
+      
 
         //宋体正文内容
         private static Font fontContent = new Font(BaseFont.CreateFont(fontCHN, BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED), (float)10, 1, BaseColor.DARK_GRAY);
@@ -35,6 +38,47 @@ namespace Xms.File
         //宋体正文内容-红色
         private static Font fontContentRed = new Font(BaseFont.CreateFont(fontCHN, BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED), (float)10, 1, BaseColor.RED);
 
+
+
+        public string CreateRebursmentCertifyPDF(ILogService logService,string filePath, ArchiveItem archiveItem)
+        {
+            try
+            {
+                _doc = new Document(PageSize.A4);//默认边距，36磅
+                FileStream fs = new FileStream(filePath, FileMode.Create);
+                PdfWriter writer = PdfWriter.GetInstance(_doc, fs);
+                writer.CloseStream = false;//把doc内容写入流中
+                _doc.Open();
+                CreatePageHeader();
+                //_doc.AddTitle("电子发票流程报销凭证");
+                //_doc.Add(new Paragraph("电子发票流程报销凭证"));
+                CreateTextAlignCenter("电子发票流程报销凭证");
+                //生成报销凭证
+                CreateTableForRebursment(archiveItem);
+                _doc.Close();//关闭文档
+                //保存PDF文件
+                MemoryStream ms = new MemoryStream();
+                if (fs != null)
+                {
+                    byte[] bytes = new byte[fs.Length];//定义一个长度为fs长度的字节数组
+                    fs.Read(bytes, 0, (int)fs.Length);//把fs的内容读到字节数组中
+                    ms.Write(bytes, 0, bytes.Length);//把字节内容读到流中
+                    fs.Flush();
+                    fs.Close();
+                }
+                ms.Close();
+                ms.Dispose();
+
+            }
+            catch(Exception ex)
+            {
+                logService.Error("PDFCreator CreateRebursmentCertifyPDF method throws exception", ex);
+            }
+            return filePath;
+        }
+
+       
+
         /// <summary>
         /// 生成流程明细PDF文件
         /// </summary>
@@ -43,7 +87,7 @@ namespace Xms.File
         /// <param name="items">流程明细条目</param>
         /// <param name="floats">表格宽度每列宽度</param>
         /// <returns></returns>
-        public string CreateWorkFlowPDFForMultipleWorkFlowInsance(ILogService logService ,string filePath, List<WorkFlowInstance> items)
+        public string CreateWorkFlowPDFForMultipleWorkFlowInsance(ILogService logService ,string filePath, List<WorkFlowInstance> items,Func<Guid,string> func)
         {
             try
             {
@@ -54,8 +98,10 @@ namespace Xms.File
                 _doc.Open();
                 //创建页眉+图片+下划线
                 CreatePageHeader();
-                _doc.AddTitle("电子发票流程报销信息");
-                foreach(var workflowInstance in items)
+                //_doc.AddTitle("电子发票流程报销信息");
+                CreateTextAlignCenter("电子发票流程报销信息");
+                //_doc.Add(new Paragraph("电子发票流程报销信息"));
+                foreach (var workflowInstance in items)
                 {
                     List<WorkFlowTinyInfo> workFlowTinyInfos = new List<WorkFlowTinyInfo>();
                     WorkFlowTinyInfo workFlowTinyInfo = new WorkFlowTinyInfo
@@ -73,7 +119,7 @@ namespace Xms.File
                         {
                             Description = workflowinfo.Description,
                             HandleName = workflowinfo.Name,
-                            HandlerIdName = workflowinfo.HandlerIdName,
+                            HandlerIdName = func(workflowinfo.HandlerId),
                             Status = GetStatusDesc(workflowinfo.StateCode),
                             processedTime = workflowinfo.HandleTime.Value
                         };
@@ -159,7 +205,9 @@ namespace Xms.File
                 _doc.Open();
                 //创建页眉+图片+下划线
                 CreatePageHeader();
-                _doc.AddTitle("电子发票流程报销信息");
+                //_doc.AddTitle("电子发票流程报销信息");
+                CreateTextAlignCenter("电子发票流程报销信息");
+
                 CreateTable(items, new float[5] { 100, 100, 100,100,100 });
                 //AddPageNumberContent(writer, 1, 1); //添加页码
                 _doc.Close();//关闭文档
@@ -181,144 +229,26 @@ namespace Xms.File
             return filePath;
         }
 
-        /// <summary>
-        /// 生成PDF文件
-        /// </summary>
-        /// <param name="filePath"></param>
-        /// <returns></returns>
-        public string GeneratePDF(string filePath)
+        private static void CreateTextAlignCenter(string txt)
         {
-            try
-            {
-                //A4纸尺寸：595*420，单位：磅
-                //doc = new Document(PageSize.A4);//默认边距，36磅
-                _doc = new Document(PageSize.A5, 36, 36, 36, 36);
+            PdfPTable table = new PdfPTable(1);//一个单元格的
+            table.TotalWidth = 500;//设置绝对宽度
+            table.LockedWidth = true;//使绝对宽度模式生效
+            table.PaddingTop = 0;
 
-                //doc.SetMargins(0, 0, 0, 0);//移除页边距
+            PdfPCell cell = new PdfPCell(new Phrase(txt, fontTitle));
+            cell.BorderWidth = 0f;
+            cell.HorizontalAlignment = Element.ALIGN_CENTER;
+            cell.BorderWidthBottom = 0.1f;//底部画线
+            cell.FixedHeight = 50.00f;
+            cell.BorderColorBottom = BaseColor.DARK_GRAY;
 
-                FileStream fs = new FileStream(filePath, FileMode.Create);
-                PdfWriter writer = PdfWriter.GetInstance(_doc, fs);
-                writer.CloseStream = false;//把doc内容写入流中
-
-                _doc.Open();
-
-                //创建页眉+图片+下划线
-                CreatePageHeader();
-
-                _doc.AddTitle("生成PDF文件");
-                _doc.AddSubject("生成PDF文件");
-                _doc.AddKeywords("生成PDF文件");
-                _doc.AddCreator("www.csframework.com|C/S框架网");
-                _doc.AddAuthor("www.csframework.com|C/S框架网");
-
-                //中间内容
-                _doc.Add(new Paragraph("Hello World"));
-                _doc.Add(new Paragraph("标题字体：我是中国人/I'm Chinease!", fontTitle));
-                _doc.Add(new Paragraph("内容字体：我是中国人/I'm Chinease!", fontContent));
-
-                //Phrase类用法，同一行，短语拼接
-                Phrase p1 = new Phrase("/我是", fontContentUnderline);
-                Phrase p2 = new Phrase("/测试", fontContent);
-                Phrase p3 = new Phrase("/工程师www.csframework.com|C/S框架网", fontContentRed);
-
-                _doc.Add(p1);
-                _doc.Add(p2);
-                _doc.Add(p3);
-
-                //Chunk类用法，下划线中英文文本
-                Chunk chunk1 = new Chunk("单行下横线文本/www.csframework.com|C/S框架网", fontContentUnderline);
-                _doc.Add(new Paragraph(chunk1));
-
-                _doc.Add(new Paragraph(" "));//添加空行
-
-                CreateTable(CreateDemoData());
-
-                CreateTable(CreatePDFEntitis(), new float[3] { 30, 50, 100 });
-
-
-                //在固定位置显示文本
-                CreateText(writer, "在固定位置显示文本111111111", new Rectangle(100, 0, 333, 300), fontContentRed);
-                CreateText(writer, "在固定位置显示文本222222222", new Rectangle(100, 0, 333, 200), fontContent);
-                CreateText(writer, "www.csframework.com|C/S框架网", new Rectangle(100, 0, 333, 100), fontContent);
-
-                AddPageNumberContent(writer, 1, 1); //添加页码
-
-                _doc.Close();//关闭文档
-
-                //保存PDF文件
-                MemoryStream ms = new MemoryStream();
-                if (fs != null)
-                {
-                    byte[] bytes = new byte[fs.Length];//定义一个长度为fs长度的字节数组
-                    fs.Read(bytes, 0, (int)fs.Length);//把fs的内容读到字节数组中
-                    ms.Write(bytes, 0, bytes.Length);//把字节内容读到流中
-                    fs.Flush();
-                    fs.Close();
-                }
-
-                //设置水印
-                SetWaterMark(filePath);
-            }
-            catch (DocumentException ex)
-            {
-                throw new Exception(ex.Message);
-            }
-            return filePath;
+            table.AddCell(cell);
+            _doc.Add(table);
         }
 
 
-        public List<PDFEntity> CreatePDFEntitis()
-        {
-            List<PDFEntity> pDFEntities = new List<PDFEntity>();
 
-            PDFEntity pDFEntity = new PDFEntity
-            {
-                Path = @"d:\dd\",
-                PdfName = "FileName",
-                Size = "30"
-            };
-
-            pDFEntities.Add(pDFEntity);
-
-
-            pDFEntity = new PDFEntity
-            {
-                Path = @"d:\dd\",
-                PdfName = "FileName",
-                Size = "31"
-            };
-
-            pDFEntities.Add(pDFEntity);
-
-            return pDFEntities;
-
-        }
-
-
-        private DataTable CreateDemoData()
-        {
-            DataTable dataTable = new DataTable("Test");
-            dataTable.Columns.Add(new DataColumn("T1", typeof(System.String)));
-            dataTable.Columns.Add(new DataColumn("T2", typeof(System.String)));
-            dataTable.Columns.Add(new DataColumn("T3", typeof(System.String)));
-            dataTable.Columns.Add(new DataColumn("T4", typeof(System.String)));
-            dataTable.Columns.Add(new DataColumn("T5", typeof(System.String)));
-            dataTable.Columns.Add(new DataColumn("T6", typeof(System.String)));
-
-            for (int i = 0; i < 5; i++)
-            {
-                DataRow dr = dataTable.NewRow();
-                dr[0] = "T1";
-                dr[1] = "T2";
-                dr[2] = "T3";
-                dr[3] = "T4";
-                dr[4] = "T5";
-                dr[5] = "T6";
-                dataTable.Rows.Add(dr);
-            }
-
-            return dataTable;
-        }
 
         /// <summary>
         /// 设置水印
@@ -395,7 +325,7 @@ namespace Xms.File
         private static void CreatePageHeader()
         {
             PdfPTable table = new PdfPTable(1);//一个单元格的
-            table.TotalWidth = 350;//设置绝对宽度
+            table.TotalWidth = 500;//设置绝对宽度
             table.LockedWidth = true;//使绝对宽度模式生效
             table.PaddingTop = 0;
 
@@ -449,6 +379,113 @@ namespace Xms.File
             ct.Go();
         }
 
+        private void CreateTableForRebursment(ArchiveItem archiveItem)
+        {
+           
+            iTextSharp.text.pdf.PdfPTable datatable = new PdfPTable(4);
+            float[] headerwidths = { 50, 200, 50, 200};
+            datatable.SetWidths(headerwidths);
+            datatable.WidthPercentage = 100;
+            datatable.HeaderRows = 1;
+            datatable.PaddingTop = 5;
+
+            Phrase ph;
+            ph = new Phrase("报销人", fontContent);
+            iTextSharp.text.pdf.PdfPCell cell1 = new PdfPCell(ph);
+            cell1.HorizontalAlignment = Element.ALIGN_CENTER;
+            cell1.FixedHeight = 30;
+            cell1.BackgroundColor = new iTextSharp.text.BaseColor(0xC0, 0xC0, 0xC0);
+            datatable.AddCell(cell1);
+
+            ph = new Phrase(archiveItem.Claimer, fontContent);
+            cell1 = new PdfPCell(ph);
+            cell1.HorizontalAlignment = Element.ALIGN_CENTER;
+            cell1.FixedHeight = 30;
+            //cell1.BackgroundColor = new iTextSharp.text.BaseColor(0x00, 0x00, 0x00);
+            datatable.AddCell(cell1);
+
+
+            ph = new Phrase("报销时间", fontContent);
+            cell1 = new PdfPCell(ph);
+            cell1.HorizontalAlignment = Element.ALIGN_CENTER;
+            cell1.FixedHeight = 30;
+            cell1.BackgroundColor = new iTextSharp.text.BaseColor(0xC0, 0xC0, 0xC0);
+            datatable.AddCell(cell1);
+
+            ph = new Phrase(archiveItem.ApplicationTime.ToString(), fontContent);
+            cell1 = new PdfPCell(ph);
+            cell1.HorizontalAlignment = Element.ALIGN_CENTER;
+            cell1.FixedHeight = 30;
+            //cell1.BackgroundColor = new iTextSharp.text.BaseColor(0x00, 0x00, 0x00);
+            datatable.AddCell(cell1);
+
+
+            ph = new Phrase("所在部门", fontContent);
+            cell1 = new PdfPCell(ph);
+            cell1.HorizontalAlignment = Element.ALIGN_CENTER;
+            cell1.FixedHeight = 30;
+            cell1.BackgroundColor = new iTextSharp.text.BaseColor(0xC0, 0xC0, 0xC0);
+            datatable.AddCell(cell1);
+
+            ph = new Phrase(archiveItem.Department, fontContent);
+            cell1 = new PdfPCell(ph);
+            cell1.HorizontalAlignment = Element.ALIGN_CENTER;
+            cell1.FixedHeight = 30;
+            //cell1.BackgroundColor = new iTextSharp.text.BaseColor(0x00, 0x00, 0x00);
+            datatable.AddCell(cell1);
+
+            ph = new Phrase("报销金额", fontContent);
+            cell1 = new PdfPCell(ph);
+            cell1.HorizontalAlignment = Element.ALIGN_CENTER;
+            cell1.FixedHeight = 30;
+            cell1.BackgroundColor = new iTextSharp.text.BaseColor(0xC0, 0xC0, 0xC0);
+            datatable.AddCell(cell1);
+
+            ph = new Phrase(archiveItem.Amount.ToString(), fontContent);
+            cell1 = new PdfPCell(ph);
+            cell1.HorizontalAlignment = Element.ALIGN_CENTER;
+            cell1.FixedHeight = 30;
+            //cell1.BackgroundColor = new iTextSharp.text.BaseColor(0x00, 0x00, 0x00);
+            datatable.AddCell(cell1);
+
+
+            ph = new Phrase("名称", fontContent);
+            cell1 = new PdfPCell(ph);
+            cell1.HorizontalAlignment = Element.ALIGN_CENTER;
+            cell1.FixedHeight = 60;
+            cell1.BackgroundColor = new iTextSharp.text.BaseColor(0xC0, 0xC0, 0xC0);
+            datatable.AddCell(cell1);
+
+            ph = new Phrase(archiveItem.Title, fontContent);
+            cell1 = new PdfPCell(ph);
+            cell1.HorizontalAlignment = Element.ALIGN_CENTER;
+            cell1.FixedHeight = 60;
+            //cell1.BackgroundColor = new iTextSharp.text.BaseColor(0x00, 0x00, 0x00);
+            datatable.AddCell(cell1);
+
+
+            ph = new Phrase("事由", fontContent);
+            cell1 = new PdfPCell(ph);
+            cell1.HorizontalAlignment = Element.ALIGN_CENTER;
+            cell1.FixedHeight = 60;
+            cell1.BackgroundColor = new iTextSharp.text.BaseColor(0xC0, 0xC0, 0xC0);
+            datatable.AddCell(cell1);
+
+            ph = new Phrase(archiveItem.Reason, fontContent);
+            cell1 = new PdfPCell(ph);
+            cell1.HorizontalAlignment = Element.ALIGN_CENTER;
+            cell1.FixedHeight = 60;
+            //cell1.BackgroundColor = new iTextSharp.text.BaseColor(0x00, 0x00, 0x00);
+            datatable.AddCell(cell1);
+            _doc.Add(datatable);
+        }
+
+        /// <summary>
+        /// 给流程节点审批信息做节点。
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="list"></param>
+        /// <param name="headerwidths"></param>
         private void CreateTable<T>(List<T> list, float[] headerwidths)
         {
             if (list == null || list.Count == 0) return;
@@ -500,8 +537,6 @@ namespace Xms.File
             }
             _doc.Add(datatable);
         }
-
-
 
         /// <summary>
         /// 在PDF生成表格

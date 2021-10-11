@@ -28,6 +28,7 @@ namespace Xms.Web.Controllers
         private readonly IAttributeFinder _attributeFinder;
         private readonly IAttachmentFinder _attachmentFinder;
         private readonly IWebHelper _webHelper;
+    
 
         public FileController(IWebAppContext appContext
             , IEntityFinder entityFinder
@@ -126,20 +127,28 @@ namespace Xms.Web.Controllers
             {
                 return JError(T["parameter_error"]);
             }
+            string errorInfo = string.Empty;
             if (model.Attachments.NotEmpty())
             {
                 Func<string,Invoice> func = (s) =>
                 {
                     return DoOCR(s);
                 };
-                var result = await _attachmentCreater.CreateManyAsync(model.EntityId, model.ObjectId, model.Attachments, func).ConfigureAwait(false);
 
-                if (result.NotEmpty())
+                Func<string, string> errorLogs = (s) =>
+                {
+                    errorInfo = s;
+                    return errorInfo;
+                };
+
+                var result = await _attachmentCreater.CreateManyAsync(model.EntityId, model.ObjectId, model.Attachments, func, errorLogs).ConfigureAwait(false);
+
+                if (result.NotEmpty()&& string.IsNullOrWhiteSpace(errorInfo))
                 {
                     return JOk(T["saved_success"], result);
                 }
             }
-            return SaveFailure();
+            return SaveFailure(errorInfo, null);
         }
 
         private Invoice DoOCR(string filePath)
@@ -205,11 +214,11 @@ namespace Xms.Web.Controllers
         [Description("删除附件")]
         public IActionResult Delete([FromBody]DeleteAttachmentModel model)
         {
-            if (model.EntityId.Equals(Guid.Empty) || model.ObjectId.Equals(Guid.Empty)||model.RecordId[0].Equals(Guid.Empty))
+            if (model.EntityId.Equals(Guid.Empty) || model.ObjectId.Equals(Guid.Empty))
             {
                 return JError(T["parameter_error"]);
             }
-            var flag = _attachmentDeleter.DeleteById(model.RecordId[0]);
+            var flag = _attachmentDeleter.DeleteById(model.EntityId, model.ObjectId,model.RecordId);
             return flag.DeleteResult(T);
         }
     }

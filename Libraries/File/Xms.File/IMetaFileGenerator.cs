@@ -9,7 +9,7 @@ namespace Xms.File
     public interface IMetaFileGenerator
     {
         void ZipFiles(Guid mainEntityID, List<WorkFlowInstance> workFlowInstances);
-        string GenerateFileXML(Guid entityId, List<WorkFlowProcess> workFlowProcesses);
+        string GenerateFileXML(Guid entityId, List<WorkFlowProcess> workFlowProcesses,out ArchiveInstructions archiveInstructions);
 
         void CreateWorkFlowPDF(List<WorkFlowProcess> workFlowProcesses);
     }

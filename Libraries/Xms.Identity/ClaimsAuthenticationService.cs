@@ -21,17 +21,20 @@ namespace Xms.Identity
         private readonly long _expiration = 30;
         private readonly ISessionService _sessionService;
         private ICurrentUser _cachedUser;
+        private readonly IBusinessUnitService _businessUnitService;
 
         public ClaimAuthenticationService(IHttpContextAccessor httpContext
             , ISessionService sessionService
             , ISystemUserService userService
             , ICurrentUser currentUser
+            , IBusinessUnitService businessUnitService
             )
         {
             _httpContext = httpContext.HttpContext;
             _sessionService = sessionService;
             _userService = userService;
             _cachedUser = currentUser;
+            _businessUnitService = businessUnitService;
         }
 
         public virtual async void SignIn(SystemUser user, bool persistent = true)
@@ -61,6 +64,13 @@ namespace Xms.Identity
             _cachedUser.OrganizationId = user.OrganizationId;
             _cachedUser.BusinessUnitId = user.BusinessUnitId;
             _cachedUser.SessionId = _sessionService.GetId();
+
+            if(user.BusinessUnitId!=null)
+            {
+                BusinessUnit businessUnit = _businessUnitService.FindById(user.BusinessUnitId);
+                if(businessUnit!=null)
+                _cachedUser.BusinessUnitIdName = businessUnit.Name;
+            }
 
             _sessionService.Set(CurrentUser.SESSION_KEY, _cachedUser);
         }

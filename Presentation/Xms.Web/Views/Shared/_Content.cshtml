@@ -41,6 +41,7 @@
     @{await Html.RenderPartialAsync("UserContext"); }
     <script>
         jQuery(function () {
+            //debugger;
             Xms.Web.Loading();
             if (typeof parent !== 'undefined') {
                 if (parent != window) {//判断当前页面是否为子页面

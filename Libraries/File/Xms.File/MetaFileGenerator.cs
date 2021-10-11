@@ -37,7 +37,12 @@ namespace Xms.File
         /// <summary>
         /// 报销流程PDF文件
         /// </summary>
-        public string workflowPDFFilePath    = System.AppDomain.CurrentDomain.BaseDirectory + @"_temp\报销流程信息.pdf";
+        public string workflowPDFFilePath        = System.AppDomain.CurrentDomain.BaseDirectory + @"_temp\报销流程信息.pdf";
+
+        /// <summary>
+        /// 报销凭证PDF文件
+        /// </summary>
+        public string rembursmentCertifyFilePath = System.AppDomain.CurrentDomain.BaseDirectory + @"_temp\报销凭证.pdf";
         /// <summary>
         /// 上传的发票所在临时位置
         /// </summary>
@@ -116,8 +121,13 @@ namespace Xms.File
                 //附件流程信息包
                 this.CreateWorkFlowPDFWithMultipleInstance(_logService,workFlowInstances);
 
+                ArchiveInstructions archiveInstructions = null;
+
                 //生成ASIP数据包中的XML文件
-                string archiveNO = this.GenerateFileXML(mainEntityID, workFlowInstances[0].Steps);
+                string archiveNO = this.GenerateFileXML(mainEntityID, workFlowInstances[0].Steps, out archiveInstructions);
+
+                //生成报销凭证
+                this.CreateRebursmentCertify(_logService,archiveInstructions.ArchiveItemInstance);
 
                 //设定压缩包文件名。
                 string destinationZipFilePath = System.AppDomain.CurrentDomain.BaseDirectory + @"_tempZip\" + archiveNO + ".zip";
@@ -174,6 +184,27 @@ namespace Xms.File
             return files;
         }
 
+        public string GetUserNameByUserGuid(Guid userGuid)
+        {
+            var query = new QueryExpression("SystemUser", _appContext.GetFeature<ICurrentUser>().UserSettings.LanguageId);
+            query.ColumnSet.AddColumns("Name");
+            query.Criteria.AddCondition("SystemUserId", ConditionOperator.Equal, userGuid);
+            Entity entity = _dataFinder.Retrieve(query, true);
+            string userName = string.Empty;
+            if (entity != null)
+            {
+                userName = entity.GetStringValueExtension("Name");
+            }
+            return userName;
+        }
+
+
+        public void CreateRebursmentCertify(ILogService logService, ArchiveItem archiveItem)
+        {
+            PDFCreator<ArchiveItem> pDFCreator = new PDFCreator<ArchiveItem>();
+            pDFCreator.CreateRebursmentCertifyPDF(_logService, rembursmentCertifyFilePath, archiveItem);
+        }
+
         /// <summary>
         /// 生成工作流备忘PDF
         /// </summary>
@@ -181,7 +212,13 @@ namespace Xms.File
         public void CreateWorkFlowPDFWithMultipleInstance(ILogService _logService,List<WorkFlowInstance> workflowInstances)
         {
             PDFCreator<WorkFlowTinyInfo> pDFCreator = new PDFCreator<WorkFlowTinyInfo>();
-            pDFCreator.CreateWorkFlowPDFForMultipleWorkFlowInsance(_logService,workflowPDFFilePath, workflowInstances);
+
+            Func<Guid, string> func = (s) =>
+             {
+                 return GetUserNameByUserGuid(s);
+             };
+
+            pDFCreator.CreateWorkFlowPDFForMultipleWorkFlowInsance(_logService,workflowPDFFilePath, workflowInstances,func);
         }
 
         /// <summary>
@@ -268,7 +305,7 @@ namespace Xms.File
         /// <param name="entityId"></param>
         /// <param name="workFlowProcesses"></param>
         /// <returns></returns>
-        public string GenerateFileXML(Guid entityId, List<WorkFlowProcess> workFlowProcesses)
+        public string GenerateFileXML(Guid entityId, List<WorkFlowProcess> workFlowProcesses,out ArchiveInstructions archiveInstructions)
         {
             string strArchiveNo = string.Empty;
             Entity mainEntity = _dataFinder.RetrieveById(mainEntityName,entityId);
@@ -290,7 +327,7 @@ namespace Xms.File
                     }
                 }
                 
-                ArchiveInstructions archiveInstructions = new ArchiveInstructions
+                archiveInstructions = new ArchiveInstructions
                 {
                     ArchiveItemInstance = new ArchiveItem
                     {
@@ -323,7 +360,7 @@ namespace Xms.File
                             PieceNum = subEntity.GetIntValueExtension("Amount"),
                             InvoiceName = subEntity.GetStringValueExtension("Name"),
                             InvoiceType = subEntity.GetStringValueExtension("ReimbursedType"),
-                            MoneyAmount = subEntity.GetIntValueExtension("MoneyAmount"),
+                            MoneyAmount = subEntity.GetDecimalValueExtension("MoneyAmount"),
                             StartTime = subEntity.GetDateValueExtension("FeeStartTime"),
                             EndTime = subEntity.GetDateValueExtension("FeeEndTime"),
                             UnitPrice = subEntity.GetDecimalValueExtension("UnitFee"),
@@ -336,6 +373,11 @@ namespace Xms.File
                     }
                     //this.CreateFileMetaXML(fileMetaItems);
                 }
+            }
+            else
+            {
+                archiveInstructions = new ArchiveInstructions
+                { };
             }
             return strArchiveNo;
         }

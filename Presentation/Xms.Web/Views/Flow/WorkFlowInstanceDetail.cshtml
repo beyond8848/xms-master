@@ -39,7 +39,7 @@
                                 <th>
                                     意见/说明
                                 </th>
-                                <th width="15%">
+                                <th width="15%" style="display:none; ">
                                     附件
                                 </th>
                                 <th width="15%">
@@ -63,7 +63,7 @@
                                         <td class="workflow-item-handler">@runner.ApplicantName</td>
                                         <td class="workflow-item-state"><span class="label label-success">已发起</span></td>
                                         <td class="workflow-item-desc">@runner.Description</td>
-                                        <td class="workflow-item-attach">
+                                        <td class="workflow-item-attach" style="display:none; ">
                                             @if (runner.Attachments > 0)
                                             {
                                                 <a href="@("/" + app.OrganizationUniqueName)/flow/WorkFlowAttachments?processid=@runner.WorkFlowInstanceId&preview=true" target="_blank">预览</a>
@@ -101,7 +101,7 @@
                                                 }
                                             </td>
                                             <td class="workflow-item-desc">@step.Description</td>
-                                            <td class="workflow-item-attach">
+                                            <td class="workflow-item-attach" style="display:none; ">
                                                 @if (step.Attachments > 0)
                                                 {
                                                     <a href="@("/" + app.OrganizationUniqueName)/flow/WorkFlowAttachments?processid=@step.WorkFlowProcessId&preview=true" target="_blank">预览</a>
@@ -118,7 +118,7 @@
                                             <td class="workflow-item-handler">@runner.ApplicantName</td>
                                             <td class="workflow-item-state"><span class="label label-danger">已撤消</span></td>
                                             <td class="workflow-item-desc">@runner.Description</td>
-                                            <td class="workflow-item-attach"></td>
+                                            <td class="workflow-item-attach" style="display:none; "></td>
                                             <td class="workflow-item-date">@(runner.CompletedOn.HasValue ? runner.CompletedOn.Value.ToString("MM-dd HH:mm") : "")</td>
                                         </tr>
                                     }

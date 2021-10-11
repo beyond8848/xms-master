@@ -58,7 +58,7 @@ namespace Xms.File
         /// <param name="entityId">关联实体id</param>
         /// <param name="objectId">关联记录id</param>
         /// <returns></returns>
-        public virtual bool DeleteById(Guid entityId, Guid objectId)
+        public virtual bool DeleteById(Guid entityId, Guid objectId,Guid[] recordIds)
         {
             //查询
             var query = new QueryExpression("attachment", _appContext.GetFeature<ICurrentUser>().UserSettings.LanguageId);
@@ -69,9 +69,11 @@ namespace Xms.File
             var result = false;
             if (entities.NotEmpty())
             {
-                result = _dataDeleter.Delete("attachment", entities.Select(x => x.GetIdValue()).ToList());
+                result = _dataDeleter.Delete("attachment", recordIds);
                 if (result)
                 {
+                    //同时删除报销明细里的
+                    _dataDeleter.Delete("ReimbursedDetail", recordIds); //附件明细表的主键值与报销明细表里的主键值相同。
                     //delete files
                     foreach (var item in entities)
                     {

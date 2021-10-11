@@ -125,7 +125,7 @@
 
   <ItemGroup>
     <Reference Include="DotNetCoreTest">
-      <HintPath>C:\Users\Administrator.6W0GDXN1TRQ47C7\Downloads\InvoiceOCRDemo-master (2)\DotNetCoreTest\bin\Debug\netcoreapp3.1\DotNetCoreTest.dll</HintPath>
+      <HintPath>bin\Debug\netcoreapp3.1\DotNetCoreTest.dll</HintPath>
     </Reference>
   </ItemGroup>
 
