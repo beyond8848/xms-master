@@ -1,11 +1,14 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Threading.Tasks;
 using Xms.File;
 using Xms.Infrastructure.Utility;
+using Xms.Logging.AppLog;
 using Xms.OCR;
 using Xms.Schema.Attribute;
 using Xms.Schema.Entity;
@@ -28,19 +31,22 @@ namespace Xms.Web.Controllers
         private readonly IAttributeFinder _attributeFinder;
         private readonly IAttachmentFinder _attachmentFinder;
         private readonly IWebHelper _webHelper;
+        private readonly ILogService _logService;
     
 
         public FileController(IWebAppContext appContext
             , IEntityFinder entityFinder
             , IAttributeFinder attributeFinder
             , IAttachmentFinder attachmentFinder
-            , IWebHelper webHelper)
+            , IWebHelper webHelper
+            , ILogService logService)
             : base(appContext)
         {
             _entityFinder = entityFinder;
             _attributeFinder = attributeFinder;
             _attachmentFinder = attachmentFinder;
             _webHelper = webHelper;
+            _logService = logService;
         }
 
         //[Description("文件列表")]
@@ -103,12 +109,15 @@ namespace Xms.Web.Controllers
     public class FileCreaterController : WebControllerBase
     {
         private readonly IAttachmentCreater _attachmentCreater;
+        private readonly ILogService _logService;
 
         public FileCreaterController(IWebAppContext appContext
-            , IAttachmentCreater attachmentCreater)
+            , IAttachmentCreater attachmentCreater
+            , ILogService logService)
             : base(appContext)
         {
             _attachmentCreater = attachmentCreater;
+            _logService = logService;
         }
 
         [Description("新建附件")]
@@ -151,9 +160,26 @@ namespace Xms.Web.Controllers
             return SaveFailure(errorInfo, null);
         }
 
+        private static string _OCRConfigPath;
+        public static string OCRConfigPath
+        {
+            get
+            {
+                if(string.IsNullOrWhiteSpace(_OCRConfigPath))
+                {
+                    var builder = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json", true, reloadOnChange: true);
+                    var config = builder.Build();
+                    _OCRConfigPath = config["OCRConfigPath:ConfigPath"];
+                }
+                return _OCRConfigPath;
+            }
+        }
+
         private Invoice DoOCR(string filePath)
         {
-            string paddleConfigFile = @"D:\OCR\PaddleOCR-release-2.1\deploy\cpp_infer\tools\config.txt";
+            //_logService.Information(OCRConfigPath);
+            string paddleConfigFile = OCRConfigPath;
+            //_logService.Information(filePath);
             DotNetCoreTest.Invoice invoiceOCR = DotNetCoreTest.StartOCR.Do(filePath, paddleConfigFile);
             Invoice invoice = new Invoice();
             invoice.Normal = new NormalInvoice();
@@ -169,7 +195,7 @@ namespace Xms.Web.Controllers
         private List<Invoice> DoOCR(List<IFormFile> list)
         {
             List<Invoice> invoices = new List<Invoice>();
-            string paddleConfigFile = @"D:\OCR\PaddleOCR-release-2.1\deploy\cpp_infer\tools\config.txt";
+            string paddleConfigFile = OCRConfigPath;
             foreach(var file in list)
             {
                DotNetCoreTest.Invoice invoiceOCR = DotNetCoreTest.StartOCR.Do(file.FileName, paddleConfigFile);

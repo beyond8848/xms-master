@@ -176,6 +176,7 @@ namespace Xms.File
                        .SetAttributeValue("UnitFee", 1.00)
                        .SetAttributeValue("AssociatedFilePath", savePath)
                        .SetAttributeValue("InvoiceCode", ni.InvoiceNo)
+                       .SetAttributeValue("InvoiceDM",ni.InvoiceID)
                        .SetAttributeValue("ArchiveNo", "");
                         reimbursedDetails.Add(ent2);
                         ////////////////////////////////////////////////////////////////////////////////////
