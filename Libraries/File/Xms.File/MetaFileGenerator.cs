@@ -38,6 +38,16 @@ namespace Xms.File
         /// 报销流程PDF文件
         /// </summary>
         public string workflowPDFFilePath        = System.AppDomain.CurrentDomain.BaseDirectory + @"_temp\报销流程信息.pdf";
+        /// <summary>
+        /// 报销审批单PDF文件
+        /// </summary>
+        public string examinePDFFilePath = System.AppDomain.CurrentDomain.BaseDirectory + @"_temp\报销审批单.pdf";
+
+
+        /// <summary>
+        /// 报销审批单PDF文件复制路径
+        /// </summary>
+        public string examinePDFCopyPath = System.AppDomain.CurrentDomain.BaseDirectory + @"\cert\";
 
         /// <summary>
         /// 报销凭证PDF文件
@@ -121,6 +131,7 @@ namespace Xms.File
                 //附件流程信息包
                 this.CreateWorkFlowPDFWithMultipleInstance(_logService,workFlowInstances);
 
+
                 ArchiveInstructions archiveInstructions = null;
 
                 //生成ASIP数据包中的XML文件
@@ -128,6 +139,19 @@ namespace Xms.File
 
                 //生成报销凭证
                 this.CreateRebursmentCertify(_logService,archiveInstructions.ArchiveItemInstance);
+
+                //生成报销审批单
+                this.CreateExaminationPDF(_logService, workFlowInstances, archiveInstructions.ArchiveItemInstance);
+
+                string savePath = examinePDFCopyPath + mainEntityID + @"\报销凭证.pdf";
+                if (!Directory.Exists(examinePDFCopyPath + mainEntityID))
+                    Directory.CreateDirectory(examinePDFCopyPath + mainEntityID);
+                if (System.IO.File.Exists(examinePDFFilePath))
+                {
+                    if (System.IO.File.Exists(savePath))
+                        System.IO.File.Delete(examinePDFCopyPath);
+                    System.IO.File.Copy(examinePDFFilePath, savePath);
+                }
 
                 //设定压缩包文件名。
                 string destinationZipFilePath = System.AppDomain.CurrentDomain.BaseDirectory + @"_tempZip\" + archiveNO + ".zip";
@@ -219,6 +243,16 @@ namespace Xms.File
              };
 
             pDFCreator.CreateWorkFlowPDFForMultipleWorkFlowInsance(_logService,workflowPDFFilePath, workflowInstances,func);
+        }
+
+        public void CreateExaminationPDF(ILogService _logService, List<WorkFlowInstance> workflowInstances, ArchiveItem archiveItem)
+        {
+            PDFCreator<WorkFlowTinyInfo> pDFCreator = new PDFCreator<WorkFlowTinyInfo>();
+            Func<Guid, string> func = (s) =>
+            {
+                return GetUserNameByUserGuid(s);
+            };
+            pDFCreator.CreateExaminationPDF(_logService, examinePDFFilePath, archiveItem, workflowInstances, func);
         }
 
         /// <summary>
