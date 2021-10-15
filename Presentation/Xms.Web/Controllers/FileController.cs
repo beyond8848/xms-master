@@ -70,7 +70,12 @@ namespace Xms.Web.Controllers
             ViewData["DialogModel"] = dm;
             return View(model);
         }
-
+        [Description("下载报销单")]
+        public IActionResult DownLoadInvoice(Guid id)
+        {
+            string path = System.AppDomain.CurrentDomain.BaseDirectory +@"cert\" +id + @"\报销凭证.pdf";
+            return new FileStreamResult(System.IO.File.OpenRead(path), "applicaton/pdf");
+        }
         [Description("下载附件")]
         public IActionResult Download(Guid id, string sid, bool preview = false)
         {
