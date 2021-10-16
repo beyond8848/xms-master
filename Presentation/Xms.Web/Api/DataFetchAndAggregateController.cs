@@ -55,6 +55,11 @@ namespace Xms.Web.Api
         [HttpPost]
         public IActionResult Post([FromBody]EntityGridModel model)
         {
+            bool IsReImbursmentArchived = false;
+            if(!string.IsNullOrWhiteSpace(model.isarchived))
+            {
+                IsReImbursmentArchived = true;
+            }
             QueryView.Domain.QueryView queryView = null;
             if (model.QueryViewId.HasValue && !model.QueryViewId.Equals(Guid.Empty))
             {
@@ -125,7 +130,32 @@ namespace Xms.Web.Api
                 //如果被引用ID为空，则不查询数据
                 canFetch = false;
             }
+
+            if (IsReImbursmentArchived)
+            {
+                ConditionExpression conditionExpression = new ConditionExpression
+                {
+                    AttributeName = "processstate",
+                    Operator = ConditionOperator.Equal
+                };
+                conditionExpression.Values.Add("2");
+
+                ConditionExpression conditionExpression1 = new ConditionExpression
+                {
+                    AttributeName = "IsArchived",
+                    Operator = ConditionOperator.NotEqual
+                };
+                conditionExpression1.Values.Add("1");
+
+
+                FilterExpression filterExpression = new FilterExpression();
+                filterExpression.AddCondition(conditionExpression);
+                //filterExpression.AddCondition(conditionExpression1);
+                model.Filter.AddFilter(filterExpression);
+            }
+
             fetch.Filter = model.Filter;
+
             if (canFetch)
             {
                 fetch.User = CurrentUser;

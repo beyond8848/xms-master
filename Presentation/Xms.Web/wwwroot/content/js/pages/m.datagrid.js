@@ -82,20 +82,41 @@
         {
             classname: 'btn btn-link btn-xs', label: '上传电子发票', name: 'UploadInvoice', enabled: true, icon: 'glyphicon glyphicon-arrow-up', event: function (e, n, self) {
                 //self.delDatas();
-                if (Xms.Page.PageContext.RecordId == null || Xms.Page.PageContext.RecordId.length == 0) {
-                    Xms.Web.Toast("请先保存报销基本信息，再上传电子发票！", 'error');
-                    return;
-                }
+                //if (Xms.Page.PageContext.RecordId == null || Xms.Page.PageContext.RecordId.length == 0) {
+                //    Xms.Web.Toast("请先保存报销基本信息，再上传电子发票！", 'error');
+                //    return;
+                //}
                 //var aObject = $("a[title='保存']");
                 //if (aObject.length>0)
                 //{
                 //    aObject.click();
                 //}
+                if (Xms.Page.PageContext.RecordId == null || Xms.Page.PageContext.RecordId.length==0) {
+                    Xms.Page.PageContext.RecordId = generateUUID();
+                    self.datas.pageIsEdit = true;
+                    var array = new Array(1);
+                    array[0] = Xms.Page.PageContext.RecordId;
+                    self.datas.filter.Conditions.values = array;
+                }
+               
                 Xms.Web.OpenDialog('/file/AttachmentsDialog?entityid=' + Xms.Page.PageContext.EntityId + '&objectid=' + Xms.Page.PageContext.RecordId);
                 //self.$wrap.trigger('gridview.deleteRow', { e: e, n: n, self: self });
                 //Need to reload data grid via invoking loadDataGrid method.
             }, eventtype: 'click'
         }];
+    function generateUUID() {
+        var d = new Date().getTime();
+        if (window.performance && typeof window.performance.now === "function") {
+            d += performance.now(); //use high-precision timer if available
+        }
+        var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = (d + Math.random() * 16) % 16 | 0;
+            d = Math.floor(d / 16);
+            return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+        return uuid;
+    }
+
     function entityDatagrid(id, $context, datas) {
         var self = this;
         this.prefix = prefix;
@@ -421,16 +442,64 @@
             }
         });
         $('button[name=removeRowBtnLocal]', self.$parent).off('click').on('click', null, function (e) {
+            debugger;
             var parRow = $(this).parents('tr:first'), index = parRow.index();
             self.$plug.cDatagrid('deleteRow', index - 1);
         });
         $('[name=searchBtn]', self.$parent).off('click').on('click', null, function (e) {
+            debugger;
             self.$plug.cDatagrid('refreshDataAndView');
+           
         });
         $('[name=clearBtn]', self.$parent).off('click').on('click', null, function (e) {
+            debugger;
             self.$searcher.find('input[name="Q"]').val('')
             self.$plug.cDatagrid('refreshDataAndView');
+
         });
+
+        $('button[name=attachFileUploadBtnLocal]', self.$parent).off('click').on('click', null, function (e) {
+            var parRow = $(this).parents('tr:first'), index = parRow.index();
+            var rowData = self.$plug.cDatagrid('getRowData', index - 1);
+            var id = parRow.find('input[name="recordid"]:first').val();
+            if (!id||id=='') {
+                window.alert("请先上传电子发票,然后再上传发票关联的附件！");
+                return;
+            }
+            Xms.Web.OpenDialog('/file/AttachmentsDialog?entityid=CFE7EF4C-B87E-4E46-850D-F8E11FAD5F6C&objectid=' + id+'&Flag=Create');
+            //window.alert('attachFileUploadBtnLocal');
+        });
+        $('button[name=attachFileUploadBtn]', self.$parent).off('click').on('click', null, function (e) {
+            var parRow = $(this).parents('tr:first'), index = parRow.index();
+            var rowData = self.$plug.cDatagrid('getRowData', index - 1);
+            var id = parRow.find('input[name="recordid"]:first').val();
+            if (!id||id=='') {
+                window.alert("请先上传电子发票,然后再上传发票关联的附件！");
+                return;
+            }
+            Xms.Web.OpenDialog('/file/AttachmentsDialog?entityid=CFE7EF4C-B87E-4E46-850D-F8E11FAD5F6C&objectid=' + id+'&Flag=Create');
+        });
+        $('button[name=openFilesBtnLocal]', self.$parent).off('click').on('click', null, function (e) {
+            var parRow = $(this).parents('tr:first'), index = parRow.index();
+            var rowData = self.$plug.cDatagrid('getRowData', index - 1);
+            var id = parRow.find('input[name="recordid"]:first').val();
+            if (!id || id == '') {
+                window.alert('请先上传电子发票!');
+                return;
+            }
+            Xms.Web.OpenDialog('/file/AttachmentsDialog?entityid=CFE7EF4C-B87E-4E46-850D-F8E11FAD5F6C&objectid=' + id+'&Flag=View');
+        });
+        $('button[name=openFilesBtn]', self.$parent).off('click').on('click', null, function (e) {
+            var parRow = $(this).parents('tr:first'), index = parRow.index();
+            var rowData = self.$plug.cDatagrid('getRowData', index - 1);
+            var id = parRow.find('input[name="recordid"]:first').val();
+            if (!id || id=='') {
+                window.alert('请先上传电子发票!');
+                return;
+            }
+            Xms.Web.OpenDialog('/file/AttachmentsDialog?entityid=CFE7EF4C-B87E-4E46-850D-F8E11FAD5F6C&objectid=' + id+'&Flag=View');
+        });
+
     }
     function filterAttributes(items, datas) {
         var layoutconfigObj = '';
@@ -524,7 +593,7 @@
             freezeCtrl: false,
             getDataUrl: function (cdatagrid, opts) {
                 var pagesize = cdatagrid.opts.pageModel.rPP
-
+                debugger;
                 return ORG_SERVERURL + '/api/data/fetchAndAggregate?entityid=' + datas.entityId + '&queryviewid=' + datas.queryId + '&onlydata=true&pagesize=' + pagesize + '&page=' + cdatagrid.opts.pageModel.page
             },
 
@@ -556,6 +625,7 @@
                 return items;
             },
             columnFilter: function (items) {
+                //debugger;
                 items[0].align = 'center';
                 var delCol = {
                     title: " ", dataIndx: 'cdatagrid_editer', edittype: 'cdatagrid_editer', editable: false, minWidth: 40, width: 40, maxWidth: 40, notHeaderFilter: true, sortable: false, render: function (ui) {
@@ -570,6 +640,7 @@
                         }
                     }
                 };
+                //console.log(datas);
                 if (datas.formState == 'disabled' || datas.formState == 'readonly') {
                     delCol.hidden = true;
                 }
@@ -577,6 +648,31 @@
                     delCol.hidden = true;
                 }
                 items.splice(1, 0, delCol);
+                if (datas.iseditable == "false") {
+                    items.unshift();
+                }
+                //增加添加附件列
+                var addInvoiceAttachCol = {
+                    title: " ", dataIndx: 'cdatagrid_editer', edittype: 'cdatagrid_editer', editable: false, minWidth: 60, width: 80, maxWidth: 80, notHeaderFilter: true, sortable: false, render: function (ui) {
+                        var datas = ui.rowData;
+                        var dataIndx = ui.dataIndx;
+                        var column = ui.column;
+                        var recordid = datas[dataIndx];
+                        if (recordid == 'new') {
+                            return '<button type="button" class="btn btn-link btn-xs" name="attachFileUploadBtnLocal"><span class="glyphicon glyphicon-cloud-upload"></span></button><button type="button" class="btn btn-link btn-xs" name="openFilesBtnLocal"><span class="glyphicon glyphicon-file"></span></button>';
+                        } else {
+                            return '<button type="button" class="btn btn-link btn-xs" name="attachFileUploadBtn"><span class="glyphicon glyphicon-cloud-upload"></span></button><button type="button" class="btn btn-link btn-xs" name="openFilesBtn"><span class="glyphicon glyphicon-file"></span></button>';
+                        }
+                    }
+                };
+                //console.log(datas);
+                if (datas.formState == 'disabled' || datas.formState == 'readonly') {
+                    addInvoiceAttachCol.hidden = true;
+                }
+                if (datas.iseditable == 'false') {
+                    addInvoiceAttachCol.hidden = true;
+                }
+                items.splice(items.length, 0, addInvoiceAttachCol);
                 if (datas.iseditable == "false") {
                     items.unshift();
                 }
@@ -676,9 +772,14 @@
                 getDataAfter: function () {
                     datas.gridviewLoaded && datas.gridviewLoaded();
                     opts._super.$wrap.trigger('gridview.getDataAfter')
+
+                   
+
                 },
                 beforeAjax: function (grid, objP, DM, PM, FM) {
                     opts._super.$wrap.trigger('gridview.beforeAjax', { grid: grid, objP: objP, DM: DM, PM: PM, FM: FM });
+                    //为了兼容先上传电子发票附件，然后保存报销单。
+                    //return true;
                     var pageIsEdit = datas.pageIsEdit;
                     if (pageIsEdit) {
                         return true;
@@ -712,8 +813,23 @@
                     if (data.length == 0) {
                         curpage = 1;
                     }
+                    //从服务端返回的数据.
                     console.log(dataJSON)
                     _super.localDatas = data;
+                    if (data != null && data.length > 0 && Xms.Page.PageContext.EntityName == "Reimbursement") {
+                        var sumMoneyMount = 0;
+                        for (var i = 0; i < data.length; i++) {
+                            var moneyAmount = data[i].moneyamount;
+                            if (moneyAmount != '') {
+                                sumMoneyMount = sumMoneyMount + Number(moneyAmount);
+                            }
+                        }
+
+                        if ($('[name=moneyamount]').length > 0) {
+                            $('[name=moneyamount]').val(sumMoneyMount.toFixed(2));
+                        }
+                    }
+
                     var res = { curPage: curpage || 1, totalRecords: resjson.totalitems, data: data }
                     datas.oldAggInfo = datas.aggInfo = dataJSON.aggregatedata;
                     opts._super.$wrap.trigger('gridview.getData', { datas: res });
@@ -726,10 +842,16 @@
                     var pagesize = PM.rPP;
 
                     var ext = { sortby: objP.dataIndx, sortdirection: objP.dir == 'up' ? '0' : '1', pagesize: pagesize };
+                    debugger;
 
                     if (datas.filter) {
+                        debugger;
+                        var array = new Array(1);
+                        array[0] = Xms.Page.PageContext.RecordId;
+                        datas.filter.Conditions[0].values = array;
                         ext.filter = datas.filter;
                     }
+                    
                     var wrapFilter = _super.$wrap.attr('data-filter');
                     if (ext.filter && ext.filter.Filters && wrapFilter && wrapFilter != '') {
                         wrapFilter = JSON.parse(decodeURIComponent(wrapFilter));
@@ -994,7 +1116,7 @@
                 freezeCtrl: false,
                 getDataUrl: function (cdatagrid, opts) {
                     var pagesize = cdatagrid.opts.pageModel.rPP;
-
+                    debugger;
                     return ORG_SERVERURL + '/api/data/fetchAndAggregate?entityid=' + datas.entityId + '&queryviewid=' + datas.queryId + '&onlydata=true&pagesize=' + pagesize + '&page=' + cdatagrid.opts.pageModel.page
                 },
 

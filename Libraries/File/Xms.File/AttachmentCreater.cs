@@ -88,6 +88,48 @@ namespace Xms.File
             return false;
         }
 
+        public virtual async Task<List<Entity>> DoInvoiceAttach(Guid entityId, Guid objectId, List<IFormFile> files)
+        {
+            //附件
+            List<Entity> attachments = new List<Entity>();
+            List<Entity> reimbursedDetails = new List<Entity>();
+            if (files.NotEmpty())
+            {
+                for (int i = 0; i < files.Count; i++)
+                {
+                    var file = files[i];
+                    if (file.Length > 0)
+                    {
+                        string dir = _webHelper.MapPath(Path, true);
+                        Guid id = Guid.NewGuid();
+                        string fileName = id.ToString() + System.IO.Path.GetExtension(file.FileName);
+                        string savePath = dir + fileName;
+                        await file.SaveAs(savePath, _settingFinder, _webHelper).ConfigureAwait(false);
+                        Entity ent = new Entity("ReimbursmentDetailAttach")
+                        .SetIdValue(id)
+                        .SetAttributeValue("name", file.FileName)
+                        .SetAttributeValue("filesize", file.Length)
+                        .SetAttributeValue("mimetype", file.ContentType)
+                        .SetAttributeValue("cdnpath", Path + fileName)
+                        .SetAttributeValue("ReimbursmentDetailID", objectId)
+                        .SetAttributeValue("AttachmentId", id)
+                        .SetAttributeValue("ObjectId", objectId)
+                        .SetAttributeValue("EntityId",new Guid("0322DA55-9E6E-47D7-A55A-72A6AB1B1873"));
+                        attachments.Add(ent);
+                    }
+                }
+            }
+            //保存附件
+            if (attachments.Count > 0)
+            {
+                //保存附件
+                _dataCreater.CreateMany(attachments);
+                //保存报销明细
+                return attachments;//.Select(x=>x["cdnpath"].ToString()).ToList();
+            }
+            return null;
+        }
+
         public virtual async Task<List<Entity>> CreateManyAsync(Guid entityId, Guid objectId, List<IFormFile> files,Func<string,Invoice> func,Func<string,string> func1)
         {
             //附件

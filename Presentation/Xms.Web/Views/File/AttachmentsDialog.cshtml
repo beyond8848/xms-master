@@ -4,6 +4,8 @@
 }
 @{
     DialogModel dialogModel = ViewData["DialogModel"] as DialogModel;
+
+   
 }
 
 <!-- 附件（Modal） -->
@@ -22,15 +24,15 @@
             </div>
             <div class="modal-body">
                 <ul id="myTab" class="nav nav-tabs">
-                    <li>
+                    <li class="active">
                         <a href="#infoPane" data-toggle="tab">
                             添加
                         </a>
                     </li>
-                    <li class="active"><a href="#listPane" data-toggle="tab">列表</a></li>
+                    <li ><a href="#listPane" data-toggle="tab">列表</a></li>
                 </ul>
                 <div id="myTabContent" class="tab-content">
-                    <div class="tab-pane" id="infoPane">
+                    <div class="tab-pane in active" id="infoPane">
                         <div class="container-fluid" style="margin-top:10px;margin-bottom:10px;">
                             <form class="form-horizontal" action="@("/"+app.OrganizationUniqueName)/file/Create" method="post" enctype="multipart/form-data">
                                 <input type="hidden" name="entityid" value="@Model.EntityId" />
@@ -71,9 +73,9 @@
                             </form>
                         </div>
                     </div>
-                    <div class="tab-pane in active" id="listPane">
+                    <div class="tab-pane" id="listPane">
                         <div class="table-responsive" id="gridview">
-                            <table class="table table-striped table-hover table-condensed" id="datatable" data-ajax="true" data-ajaxcontainer="gridview" data-ajaxcallback="AttachmentModel.rebind('')" data-sortby="@Model.SortBy.ToLower()" data-sortdirection="@Model.SortDirection" data-singlemode="@dialogModel.SingleMode" data-refresh="AttachmentModel.rebind('')">
+                            <table class="table table-striped table-hover table-condensed" id="datatable" data-ajax="true" data-ajaxcontainer="gridview" data-ajaxcallback="AttachmentModel.rebind('')" data-sortby="@Model.SortBy.ToLower()" data-sortdirection="@Model.SortDirection" data-singlemode="@dialogModel.SingleMode" @*data-refresh="AttachmentModel.rebind('')*@">
                                 <thead>
                                     <tr>
                                         <th width="2%"><input type="checkbox" name="checkall" /></th>
@@ -129,9 +131,29 @@
                             <script src="/content/js/jquery.bootpag.min.js?v=@app.PlatformSettings.VersionNumber"></script>
                             <script src="/content/js/jquery.form.js?v=@app.PlatformSettings.VersionNumber"></script>
                             <script>
+                                $(document).ready(function () {
+                                    var flag = '@ViewData["Flag"]'
+                                    if (flag == 'View') {
+                                        $('#infoPane').attr('class', 'tab-pane');
+                                        $('#listPane').attr('class', 'tab-pane in active');
+                                        $('#myTab').find('li:first').attr('class', '');
+                                        $('#myTab').children().eq(1).attr('class', 'active');
+                                    }
+                                    else {
+                                        $('#infoPane').attr('class', 'tab-pane in active');
+                                        $('#listPane').attr('class', 'tab-pane');
+                                        $('#myTab').find('li:first').attr('class', 'active');
+                                        $('#myTab').children().eq(1).attr('class', '');
+                                    }
+                                })
+
                                 $(".close").click(function () {
                                     if ($('[name=searchBtn]').length > 0)
                                         $('[name=searchBtn]').click();
+                                    if ($('#recordid').length > 0)
+                                        $('#recordid').val(Xms.Page.PageContext.RecordId);
+
+
                                 })
 
                                 var AttachmentModel = {
@@ -144,7 +166,7 @@
                                     objectid : '@(Model.ObjectId.ToString())',
                                     disabledForm: function () {
                                         AttachmentModel.dialog.find('button').prop('disabled', true);
-                                     
+
                                     },
                                     resetForm: function () {
                                         AttachmentModel.dialog.find('button').prop('disabled', false);
@@ -174,8 +196,15 @@
                                     submit: function () {
                                         //debugger;
                                         if ($('#loader').length > 0) {
-                                            $('#loader').children('div').text('上传文件及OCR识别中，请稍等待...');
-                                            $('#loader').children('div').css('width', 358);
+                                            var flag = '@ViewData["Flag"]';
+                                            if (flag=='') {
+                                                $('#loader').children('div').text('上传文件及OCR识别中，请稍等待...');
+                                                $('#loader').children('div').css('width', 358);
+                                            }
+                                            else {
+                                                $('#loader').children('div').text('上传文件中，请稍等待...');
+                                                $('#loader').children('div').css('width', 300);
+                                            }
                                         }
                                         AttachmentModel.disabledForm();
                                         AttachmentModel.dialog.find('form').submit();

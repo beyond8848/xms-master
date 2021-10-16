@@ -919,6 +919,7 @@
             freezeCtrl: false,
             isSingle: true,
             getDataUrl: function (cdatagrid, opts) {
+                debugger;
                 return ORG_SERVERURL + '/api/data/fetchAndAggregate?entityid=' + _datas.entityId + '&queryviewid=' + _datas.queryId + '&onlydata=true&pagesize=' + cdatagrid.opts.pageModel.rPP + '&page=' + cdatagrid.opts.pageModel.page
             },
 

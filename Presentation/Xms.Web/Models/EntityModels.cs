@@ -53,6 +53,8 @@ namespace Xms.Web.Models
         public string GridId { get; set; }
         public bool IsEditable { get; set; }
         public Guid? ReferencedRecordId { get; set; }
+
+        public string isarchived { get; set; }
     }
 
     public class EntityGridModel : DataListModel

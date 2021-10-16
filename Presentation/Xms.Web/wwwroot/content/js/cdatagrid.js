@@ -510,12 +510,17 @@
                     if (_entityname && dataIndx.indexOf('.') == -1) {
                         _entityname = _entityname.toLowerCase();
                         var recordid = datas[_entityname + 'id'];
-
                         if (datas[dataIndx]) {
                             if (typeof entityIframe == 'function') {
-                                return '<a class="text-primary" title="' + (datas['name'] || '') + '" href="javascript: entityIframe(\'show\', \'' + ORG_SERVERURL + '/entity/edit?entityid=' + entityid + '&formid' + formid + '=&recordid=' + recordid + '\');"  >' + (datas['name'] || '') + '</a>';
+                                if (_entityname != 'reimburseddetail')
+                                    return '<a class="text-primary" title="' + (datas['name'] || '') + '" href="javascript: entityIframe(\'show\', \'' + ORG_SERVERURL + '/entity/edit?entityid=' + entityid + '&formid' + formid + '=&recordid=' + recordid + '&IsViewFile=1\');"  >' + (datas['name'] || '') + '</a>';
+                                else
+                                    return '<a class="text-primary" title="' + (datas['name'] || '') + '" href="javascript: entityIframe(\'show\', \'' + ORG_SERVERURL + '/file/Download?id=' + recordid + '&sid' + formid + '&preview=true\');"  >' + (datas['name'] || '') + '</a>';
                             } else {
-                                return '<a class="text-primary" title="' + (datas['name'] || '') + '" href="' + ORG_SERVERURL + '/entity/edit?entityid=' + entityid + '&formid' + formid + '=&recordid=' + recordid + '" target="_blank" >' + (datas['name'] || '') + '</a>';
+                                if (_entityname !='reimburseddetail')
+                                    return '<a class="text-primary" title="' + (datas['name'] || '') + '" href="' + ORG_SERVERURL + '/entity/edit?entityid=' + entityid + '&formid' + formid + '=&recordid=' + recordid + '&IsViewFile=1" target="_blank" >' + (datas['name'] || '') + '</a>';
+                                else
+                                    return '<a class="text-primary" title="' + (datas['name'] || '') + '" href="' + ORG_SERVERURL + '/file/Download?id=' + recordid + '&sid=' + formid + '&preview=true" target="_blank" >' + (datas['name'] || '') + '</a>';
                             }
                         } else {
                             return '';

@@ -417,6 +417,7 @@
             }
         },
         loadButtons: function (callback) {
+            debugger;
             var showarea = { glo: 2, inline: 3 };//2,在列表页头部按钮，3列表行内按钮
             //行内按钮
             var btnStr = '';
@@ -856,6 +857,10 @@
             freezeCtrl: false,
             isSingle: true,
             getDataUrl: function (cdatagrid, opts) {
+                debugger;
+                if (window.location.href.indexOf('IsArchived') > 0) {
+                    return ORG_SERVERURL + '/api/data/fetchAndAggregate?entityid=' + datas.entityId + '&queryviewid=' + datas.queryId + '&onlydata=true&pagesize=' + cdatagrid.opts.pageModel.rPP + '&page=' + cdatagrid.opts.pageModel.page+'&IsArchived=true'
+                }
                 return ORG_SERVERURL + '/api/data/fetchAndAggregate?entityid=' + datas.entityId + '&queryviewid=' + datas.queryId + '&onlydata=true&pagesize=' + cdatagrid.opts.pageModel.rPP + '&page=' + cdatagrid.opts.pageModel.page
             },
 

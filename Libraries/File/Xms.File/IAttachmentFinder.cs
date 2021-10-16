@@ -9,5 +9,7 @@ namespace Xms.File
         Entity FindById(Guid id);
 
         PagedList<Entity> QueryPaged(int page, int pageSize, Guid entityId, Guid objectId);
+
+        PagedList<Entity> QueryPagedFromReimbursementDetailAttach(int page, int pageSize, Guid reimbursmentDetailId);
     }
 }
