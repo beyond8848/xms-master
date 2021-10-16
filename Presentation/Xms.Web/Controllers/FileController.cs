@@ -58,26 +58,60 @@ namespace Xms.Web.Controllers
         [Description("附件列表")]
         public IActionResult AttachmentsDialog(AttachmentsModel model, DialogModel dm)
         {
-            if (!Arguments.HasValue(model.EntityId, model.ObjectId))
+
+            if(Request.Query.Keys.Contains("Flag"))
             {
-                return JError(T["parameter_error"]);
+                string flag = Request.Query["Flag"].ToString();
+                if (flag != null)
+                    ViewData["Flag"] = flag;
             }
-            model.EntityMetaData = _entityFinder.FindByName("attachment");
-            model.AttributeMetaDatas = _attributeFinder.FindByEntityId(model.EntityMetaData.EntityId);
-            var result = _attachmentFinder.QueryPaged(model.Page, model.PageSize, model.EntityId, model.ObjectId);
-            model.Items = result.Items;
-            model.TotalItems = result.TotalItems;
-            ViewData["DialogModel"] = dm;
+            else
+            {
+                ViewData["Flag"] = "";
+            }
+          
+            if (!model.EntityId.ToString().ToUpperInvariant().Equals("CFE7EF4C-B87E-4E46-850D-F8E11FAD5F6C"))
+            {
+                //if(model.ObjectId.IsEmpty()) //如果报销单未先保存，则生成一个临时的报销单号。
+                //    model.ObjectId = System.Guid.NewGuid();
+
+                if (!Arguments.HasValue(model.EntityId, model.ObjectId))
+                {
+                    return JError(T["parameter_error"]);
+                }
+                model.EntityMetaData = _entityFinder.FindByName("attachment");
+                model.AttributeMetaDatas = _attributeFinder.FindByEntityId(model.EntityMetaData.EntityId);
+                var result = _attachmentFinder.QueryPaged(model.Page, model.PageSize, model.EntityId, model.ObjectId);
+                model.Items = result.Items;
+                model.TotalItems = result.TotalItems;
+                ViewData["DialogModel"] = dm;
+            }
+           else
+            {
+                if (!Arguments.HasValue(model.EntityId, model.ObjectId))
+                {
+                    return JError(T["parameter_error"]);
+                }
+                model.EntityMetaData = _entityFinder.FindByName("ReimbursmentDetailAttach");
+                model.AttributeMetaDatas = _attributeFinder.FindByEntityId(model.EntityMetaData.EntityId);
+                var result = _attachmentFinder.QueryPagedFromReimbursementDetailAttach(model.Page, model.PageSize,model.ObjectId);
+                model.Items = result.Items;
+                model.TotalItems = result.TotalItems;
+                ViewData["DialogModel"] = dm;
+            }
+          
             return View(model);
         }
+
+       
 
         [Description("下载附件")]
         public IActionResult Download(Guid id, string sid, bool preview = false)
         {
-            if (!sid.IsCaseInsensitiveEqual(CurrentUser.SessionId))
-            {
-                return NotFound();
-            }
+            //if (!sid.IsCaseInsensitiveEqual(CurrentUser.SessionId))
+            //{
+            //    return NotFound();
+            //}
             var result = _attachmentFinder.FindById(id);
             if (result.IsEmpty())
             {
@@ -139,23 +173,35 @@ namespace Xms.Web.Controllers
             string errorInfo = string.Empty;
             if (model.Attachments.NotEmpty())
             {
-                Func<string,Invoice> func = (s) =>
+                //如果是电子发票上传
+                if(!model.EntityId.ToString().ToUpperInvariant().Equals("CFE7EF4C-B87E-4E46-850D-F8E11FAD5F6C"))
                 {
-                    return DoOCR(s);
-                };
+                    Func<string, Invoice> func = (s) =>
+                    {
+                        return DoOCR(s);
+                    };
 
-                Func<string, string> errorLogs = (s) =>
-                {
-                    errorInfo = s;
-                    return errorInfo;
-                };
+                    Func<string, string> errorLogs = (s) =>
+                    {
+                        errorInfo = s;
+                        return errorInfo;
+                    };
 
-                var result = await _attachmentCreater.CreateManyAsync(model.EntityId, model.ObjectId, model.Attachments, func, errorLogs).ConfigureAwait(false);
-
-                if (result.NotEmpty()&& string.IsNullOrWhiteSpace(errorInfo))
-                {
-                    return JOk(T["saved_success"], result);
+                    var result = await _attachmentCreater.CreateManyAsync(model.EntityId, model.ObjectId, model.Attachments, func, errorLogs).ConfigureAwait(false);
+                    if (result.NotEmpty() && string.IsNullOrWhiteSpace(errorInfo))
+                    {
+                        return JOk(T["saved_success"], result);
+                    }
                 }
+                else
+                {
+                    var result = await _attachmentCreater.DoInvoiceAttach(model.EntityId, model.ObjectId, model.Attachments).ConfigureAwait(false);
+                    if (result.NotEmpty() && string.IsNullOrWhiteSpace(errorInfo))
+                    {
+                        return JOk(T["saved_success"], result);
+                    }
+                }
+                //
             }
             return SaveFailure(errorInfo, null);
         }
@@ -244,8 +290,18 @@ namespace Xms.Web.Controllers
             {
                 return JError(T["parameter_error"]);
             }
-            var flag = _attachmentDeleter.DeleteById(model.EntityId, model.ObjectId,model.RecordId);
-            return flag.DeleteResult(T);
+
+            if(!model.EntityId.ToString().ToUpperInvariant().Equals("CFE7EF4C-B87E-4E46-850D-F8E11FAD5F6C"))
+            {
+                var flag = _attachmentDeleter.DeleteById(model.EntityId, model.ObjectId, model.RecordId);
+                return flag.DeleteResult(T);
+            }
+            else
+            {
+                var flag = _attachmentDeleter.DeleteByReimbursmentDetailAttach(model.EntityId, model.ObjectId, model.RecordId);
+                return flag.DeleteResult(T);
+            }
+          
         }
     }
 }

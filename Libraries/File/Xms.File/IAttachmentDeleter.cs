@@ -9,6 +9,8 @@ namespace Xms.File
 
         bool DeleteById(Guid entityId, Guid objectId,Guid[] recordIds);
 
+        bool DeleteByReimbursmentDetailAttach(Guid entityId, Guid objectId, Guid[] recordIds);
+
         bool DeleteById(List<Guid> ids);
     }
 }

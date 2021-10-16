@@ -6366,6 +6366,7 @@ $(function () {
             height: 300,
             //获取数据的方法
             getDataUrl: function (cdatagrid, opts) {
+                debugger;
                 return ORG_SERVERURL + '/api/data/fetchAndAggregate?entityid=' + self.settingDatas.entityId + '&queryviewid=' + self.settingDatas.queryId + '&onlydata=true&pagesize=' + cdatagrid.opts.pageModel.rPP + '&page=' + cdatagrid.opts.pageModel.page
             },
             getColModels: function (grid, opts) {
