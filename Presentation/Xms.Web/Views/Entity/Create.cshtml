@@ -92,20 +92,31 @@
         }
         @if (!Model.ReadOnly)
         {
-            <div class="container-fluid margin-bottom clearfix" style="border:1px #eee dashed; padding:3px;" id="toolbar">
+    <div class="container-fluid margin-bottom clearfix" style="border:1px #eee dashed; padding:3px;" id="toolbar">
 
-                @if (Model.RibbonButtons.NotEmpty())
+        @if (Model.RibbonButtons.NotEmpty())
+        {
+
+            foreach (var btn in Model.RibbonButtons)
+            {
+                if (btn.Label == "查看审批流程单")
                 {
-                    foreach (var btn in Model.RibbonButtons)
-                    {
-                        <a class="@btn.CssClass@(btn.IsVisibled ? "" : " hide") btn-sm hideBySizeItem" title="@(btn.ShowLabel ? btn.Label : "")" href="javascript:void(0)" onclick="@(btn.IsEnabled && btn.IsVisibled ? btn.JsAction : "")" @(btn.IsEnabled ? "" : " disabled")><span class="@btn.Icon"></span> @(btn.ShowLabel ? btn.Label : "")</a>
-                    }
+                     <a class="btn btn-link btn-sm btn-sm hideBySizeItem" title="查看审批流程单"
+                        href="@("/"+app.OrganizationUniqueName)/file/DownLoadInvoice?id=@Html.Raw(Model.RecordId.HasValue? ""+Model.RecordId.Value.ToString()+"":"null")" 
+                        target="_blank"
+                        ><span class="glyphicon glyphicon-thumbs-up"></span> 查看审批流程单</a>
                 }
-                @if (Model.RecordId.HasValue && !Model.RecordId.Equals(Guid.Empty) && Model.EntityMetaData.WorkFlowEnabled && (Model.WorkFlowProcessState != (int)WorkFlowProcessState.Processing || Model.WorkFlowProcessState != (int)WorkFlowProcessState.Passed))
+                else
                 {
-                    <a class="btn btn-link btn-sm hideBySizeItem" href="javascript:void(0)" onclick="StartWorkFlow(Xms.Page.PageContext.EntityId, Xms.Page.PageContext.RecordId)"><span class="glyphicon glyphicon-check"></span> 启动审批</a>
+                    <a class="@btn.CssClass@(btn.IsVisibled ? "" : " hide") btn-sm hideBySizeItem" title="@(btn.ShowLabel ? btn.Label : "")" href="javascript:void(0)" onclick="@(btn.IsEnabled && btn.IsVisibled ? btn.JsAction : "")" @(btn.IsEnabled ? "" : " disabled")><span class="@btn.Icon"></span> @(btn.ShowLabel ? btn.Label : "")</a>
                 }
-            </div>
+            }
+        }
+        @if (Model.RecordId.HasValue && !Model.RecordId.Equals(Guid.Empty) && Model.EntityMetaData.WorkFlowEnabled && (Model.WorkFlowProcessState != (int)WorkFlowProcessState.Processing || Model.WorkFlowProcessState != (int)WorkFlowProcessState.Passed))
+        {
+            <a class="btn btn-link btn-sm hideBySizeItem" href="javascript:void(0)" onclick="StartWorkFlow(Xms.Page.PageContext.EntityId, Xms.Page.PageContext.RecordId)"><span class="glyphicon glyphicon-check"></span> 启动审批</a>
+        }
+    </div>
         }
 
         <div class="pull-right btn-group pt-1 toolbar-right">
