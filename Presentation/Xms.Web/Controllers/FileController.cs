@@ -183,7 +183,7 @@ namespace Xms.Web.Controllers
                 if(!model.EntityId.ToString().ToUpperInvariant().Equals("CFE7EF4C-B87E-4E46-850D-F8E11FAD5F6C"))
                 {
                     ///银行电联转汇单
-                    if(ViewBag["flag"]!=null && ViewData["flag"].ToString()=="DoArchive")
+                    if(ViewData["flag"]!=null && ViewData["flag"].ToString()=="DoArchive")
                     {
                         var result1 = await _attachmentCreater.DoCashRemittance(model.EntityId, model.ObjectId, model.Attachments).ConfigureAwait(false);
                         if (result1.NotEmpty() && string.IsNullOrWhiteSpace(errorInfo))
