@@ -101,10 +101,12 @@
             {
                 if (btn.Label == "查看审批流程单")
                 {
-                     <a class="btn btn-link btn-sm btn-sm hideBySizeItem" title="查看审批流程单"
-                        href="@("/"+app.OrganizationUniqueName)/file/DownLoadInvoice?id=@Html.Raw(Model.RecordId.HasValue? ""+Model.RecordId.Value.ToString()+"":"null")" 
-                        target="_blank"
-                        ><span class="glyphicon glyphicon-thumbs-up"></span> 查看审批流程单</a>
+                    if (Model.Entity["processstatename"].ToString() == "已通过")
+                    {
+                        <a class="btn btn-link btn-sm btn-sm hideBySizeItem" title="查看审批流程单"
+                           href="@("/" + app.OrganizationUniqueName)/file/DownLoadInvoice?id=@Html.Raw(Model.RecordId.HasValue ? "" + Model.RecordId.Value.ToString() + "" : "null")"
+                           target="_blank"><span class="glyphicon glyphicon-thumbs-up"></span> 查看审批流程单</a>
+                    }
                 }
                 else
                 {
