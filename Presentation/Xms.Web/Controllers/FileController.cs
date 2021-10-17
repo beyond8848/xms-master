@@ -106,7 +106,10 @@ namespace Xms.Web.Controllers
         public IActionResult DownLoadInvoice(Guid id)
         {
             string path = System.AppDomain.CurrentDomain.BaseDirectory +@"cert\" +id + @"\报销凭证.pdf";
-            return new FileStreamResult(System.IO.File.OpenRead(path), "application/pdf");
+            if (System.IO.File.Exists(path))
+                return new FileStreamResult(System.IO.File.OpenRead(path), "application/pdf");
+            else
+            return Content("文件可能已被删除或移动");
         }
         [Description("下载附件")]
         public IActionResult Download(Guid id, string sid, bool preview = false)

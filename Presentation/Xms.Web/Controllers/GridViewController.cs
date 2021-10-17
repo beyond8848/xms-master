@@ -60,12 +60,10 @@ namespace Xms.Web.Controllers
         [Route("{entityname?}")]
         public IActionResult List(DataListModel model)
         {
-
-            if(HttpContext.Request.Query.ContainsKey("IsArchived"))
+            if (HttpContext.Request.Query.ContainsKey("IsArchived"))
             {
                 ViewData["DoArchive"] = "True";
             }
-
             if (!model.EntityId.HasValue || model.EntityId.Equals(Guid.Empty))
             {
                 if (!model.QueryViewId.HasValue || model.QueryViewId.Equals(Guid.Empty))
