@@ -425,7 +425,20 @@
             //视图上方按钮
             var $queryviewButtons = $('#queryviewButtons');
             var gloBtnStr = '';
-
+            if (window.location.href.indexOf('IsArchived')>0) {
+                for (var i = datas.buttonsinfo.length - 1 ; i >= 0;i--) {
+                    if (datas.buttonsinfo[i]["label"] == "删除" || datas.buttonsinfo[i]["label"] == "新增" ||
+                        datas.buttonsinfo[i]["label"] == "编辑" || datas.buttonsinfo[i]["label"] == "上传发票") {
+                        datas.buttonsinfo.splice(i,1);
+                    }
+                }
+            } else {
+                for (var i = datas.buttonsinfo.length - 1; i >= 0; i--) {
+                    if (datas.buttonsinfo[i]["label"] == "归档" ) {
+                        datas.buttonsinfo.splice(i, 1);
+                    }
+                }
+            }
             datas.inlinebtnlength = 0;
             if (datas.buttonsinfo && datas.buttonsinfo.length > 0) {
                 $.each(datas.buttonsinfo, function (i, n) {

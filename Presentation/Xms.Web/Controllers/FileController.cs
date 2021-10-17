@@ -86,7 +86,7 @@ namespace Xms.Web.Controllers
                 model.TotalItems = result.TotalItems;
                 ViewData["DialogModel"] = dm;
             }
-           else
+           else  //电子发票的附件类型
             {
                 if (!Arguments.HasValue(model.EntityId, model.ObjectId))
                 {
@@ -106,7 +106,10 @@ namespace Xms.Web.Controllers
         public IActionResult DownLoadInvoice(Guid id)
         {
             string path = System.AppDomain.CurrentDomain.BaseDirectory +@"cert\" +id + @"\报销凭证.pdf";
-            return new FileStreamResult(System.IO.File.OpenRead(path), "applicaton/pdf");
+            if (System.IO.File.Exists(path))
+                return new FileStreamResult(System.IO.File.OpenRead(path), "application/pdf");
+            else
+            return Content("文件可能已被删除或移动");
         }
         [Description("下载附件")]
         public IActionResult Download(Guid id, string sid, bool preview = false)
@@ -176,9 +179,24 @@ namespace Xms.Web.Controllers
             string errorInfo = string.Empty;
             if (model.Attachments.NotEmpty())
             {
-                //如果是电子发票上传
+                //如果是电子发票上传，或者银联转汇单逻辑
                 if(!model.EntityId.ToString().ToUpperInvariant().Equals("CFE7EF4C-B87E-4E46-850D-F8E11FAD5F6C"))
                 {
+                    ///银行电联转汇单
+                    if(ViewBag["flag"]!=null && ViewData["flag"].ToString()=="DoArchive")
+                    {
+                        var result1 = await _attachmentCreater.DoCashRemittance(model.EntityId, model.ObjectId, model.Attachments).ConfigureAwait(false);
+                        if (result1.NotEmpty() && string.IsNullOrWhiteSpace(errorInfo))
+                        {
+                            return JOk(T["saved_success"], result1);
+                        }
+                        else
+                        {
+                            return JError(T["saved_error"], result1);
+                        }
+                    }
+
+                    //电子发票业务逻辑
                     Func<string, Invoice> func = (s) =>
                     {
                         return DoOCR(s);
