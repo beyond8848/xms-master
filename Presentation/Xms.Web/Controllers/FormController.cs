@@ -473,10 +473,12 @@ namespace Xms.Web.Controllers
         [HttpGet]
         [Description("更新记录")]
         [Route("{entityname?}")]
-        public IActionResult Edit(Guid entityid, Guid recordid, Guid? formid, Guid? copyid)
+        public IActionResult Edit(Guid entityid, Guid recordid, Guid? formid, Guid? copyid,string IsViewFile)
         {
-            return Create(new EntityFormModel { EntityId = entityid, RecordId = recordid, FormId = formid, CopyId = copyid });
+                return Create(new EntityFormModel { EntityId = entityid, RecordId = recordid, FormId = formid, CopyId = copyid });
             //return RedirectToAction("create", new { entityid = entityid, recordid = recordid, formid = formid });
         }
+
+ 
     }
 }

@@ -39,6 +39,7 @@ namespace Xms.Web.Api
         private readonly IAggCreater _aggCreater;
         private readonly IAggUpdater _aggUpdater;
         private readonly IAggFinder _aggFinder;
+        private readonly IDataFinder _dataFinder;
 
         private readonly IAttachmentCreater _attachmentCreater;
 
@@ -58,7 +59,8 @@ namespace Xms.Web.Api
 
             , IAttachmentCreater attachmentCreater
 
-            , IBusinessProcessFlowInstanceUpdater businessProcessFlowInstanceUpdater)
+            , IBusinessProcessFlowInstanceUpdater businessProcessFlowInstanceUpdater
+            , IDataFinder dataFinder)
             : base(appContext)
         {
             _entityFinder = entityFinder;
@@ -75,6 +77,7 @@ namespace Xms.Web.Api
             _attachmentCreater = attachmentCreater;
 
             _businessProcessFlowInstanceUpdater = businessProcessFlowInstanceUpdater;
+            _dataFinder = dataFinder;
         }
 
         [Description("保存记录")]
@@ -95,6 +98,18 @@ namespace Xms.Web.Api
             var attributeMetaDatas = _attributeFinder.FindByEntityId(model.EntityId);
             bool isNew = !(model.RecordId.HasValue && !model.RecordId.Value.Equals(Guid.Empty));
             var thisId = Guid.Empty;
+            // 针对报销系统，做额外处理.
+            if (!isNew&&entityMetaData.Name.ToLowerInvariant().Equals("reimbursement"))
+            {
+                Entity entity = _dataFinder.RetrieveById(entityMetaData.Name, model.RecordId.Value);
+                if (entity == null || entity.Count == 0)
+                {
+                    isNew = true;
+                    thisId = model.RecordId.Value;
+                }
+                  
+            }
+            //
             try
             {
                 Core.Data.Entity entity = new Core.Data.Entity(entityMetaData.Name);
@@ -109,6 +124,7 @@ namespace Xms.Web.Api
                 }
                 if (isNew)
                 {
+                    if(thisId.Equals(Guid.Empty))
                     thisId = Guid.NewGuid();
                     if (model.RelationShipName.IsNotEmpty() && model.ReferencedRecordId.HasValue)//如果存在关联关系
                     {

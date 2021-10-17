@@ -14,5 +14,9 @@ namespace Xms.File
         Task<List<Entity>> CreateManyAsync(Guid entityId, Guid objectId, List<IFormFile> files);
 
         Task<List<Entity>> CreateManyAsync(Guid entityId, Guid objectId, List<IFormFile> files, Func<string,Invoice> func, Func<string, string> func1);
+
+        Task<List<Entity>> DoInvoiceAttach(Guid entityId, Guid objectId, List<IFormFile> files);
+
+        Task<List<Entity>> DoCashRemittance(Guid entityId, Guid objectId, List<IFormFile> files);
     }
 }

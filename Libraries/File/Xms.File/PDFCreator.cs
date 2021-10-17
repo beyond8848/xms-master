@@ -20,7 +20,7 @@ namespace Xms.File
     {
         private static Document _doc;
         //中文字体-宋体
-        private static string fontCHN = System.AppDomain.CurrentDomain.BaseDirectory + "\\simsun.ttf";
+        private static string fontCHN = System.AppDomain.CurrentDomain.BaseDirectory + "simsun.ttf";
         private static string fontdb = @"c:\Windows\fonts\SIMSUN.TTC,1";
         private static BaseFont bfCHN = BaseFont.CreateFont(fontdb, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
 

@@ -420,6 +420,7 @@
             this.setFilter = function (gridname, filter, isRefresh) {
                 this._init(arguments);
                 var $datagrid = this.getGrid(gridname)
+                debugger;
                 var _filter = encodeURIComponent(JSON.stringify(filter));
                 $datagrid.attr('data-filter', _filter).parent().attr('data-filter', _filter);
                 $datagrid.on('gridview.refreshed', function (e, opts) {

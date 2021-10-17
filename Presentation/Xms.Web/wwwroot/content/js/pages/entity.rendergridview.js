@@ -135,6 +135,7 @@
                         $(GridViewModel.sectionid + ' .toolbar button:not(.btnLocal)').addClass('disabled').prop('disabled', 'disabled');
                     }
                     $(GridViewModel.sectionid + ' button[name=deleteBtn]').off('click').on('click', null, function (e) {
+                        debugger;
                         GridViewModel.DeleteRecord();
                         $('body').trigger('gridview.delete');
                         $(GridViewModel.sectionid).trigger('gridviewByid.delete');
@@ -162,6 +163,7 @@
                         $(GridViewModel.sectionid).trigger('gridviewByid.server.save');
                     });
                     $(GridViewModel.sectionid + ' button[name=freshBtn]').off('click').on('click', null, function (e) {
+                        debugger;
                         GridViewModel.rebind(null, function () {
                             if (typeof setSubGridFormular !== 'undefined') {
                                 setSubGridFormular($(GridViewModel.sectionid).parents('.subgrid:first'), 'gridview');
@@ -173,6 +175,7 @@
                         $(GridViewModel.sectionid).trigger('gridviewByid.server.rebind');
                     });
                     $(GridViewModel.sectionid + ' button[name=resetRowBtn]').off('click').on('click', null, function (e) {
+                        debugger;
                         var parTr = $(this).parents('tr:first');
                         GridViewModel.resetRow(parTr);
                         setSubGridFormular($(GridViewModel.sectionid).parents('.subgrid:first'), 'gridview');
@@ -183,6 +186,7 @@
                     GridViewModel.initedit();
                 },
                 pag_init: function () {
+                    debugger;
                     $(GridViewModel.sectionid + ' #page-selection').bootpag({
                         total: $(GridViewModel.sectionid + ' #page-selection').attr('data-total')
                         , maxVisible: 5
@@ -204,6 +208,7 @@
                     console.log('GridViewModel.sectionid', $(GridViewModel.sectionid).parent());
                 },
                 rebind: function (url, callback) {
+                    debugger;
                     var url = url || '/entity/rendergridview';
                     url = url + (url.indexOf('?') == -1 ? '?' : '&') + '__r=' + new Date().getTime();
                     //console.log(url);
@@ -237,6 +242,7 @@
                 },
                 CreateRecord: function () {
                     Xms.Web.Console(GridViewModel);
+                    debugger;
                     var url = ORG_SERVERURL + '/entity/create?entityid=' + GridViewModel.entityid + '&relationshipname=' + GridViewModel.relationshipname + '&referencedrecordid=' + GridViewModel.referencedrecordid + '&grid=' + GridViewModel.gridid;
                     //Xms.Web.OpenWindow(url);
                     $('#createModal').modal({
@@ -483,6 +489,7 @@
                         GridViewModel.savetable();
                     });
                     $(GridViewModel.sectionid + ' .datatable button[name=removeRowBtn]').off('click').on('click', null, function (e) {
+                        debugger;
                         var parRow = $(this).parents('tr:first');
                         GridViewModel.removeRow(parRow);
                         $(this).trigger('gridview.removeRowBtn');//值计算时重新绑定对应的输入框的值
@@ -492,6 +499,7 @@
                         GridViewModel.savetable();
                     });
                     $(GridViewModel.sectionid + ' .datatable button[name=removeRowBtnLocal]').off('click').on('click', null, function (e) {
+                        debugger;
                         var parRow = $(this).parents('tr:first');
                         GridViewModel.removeRowBtnLocal(parRow);
                         $(this).trigger('gridview.removeRowBtnLocal');//值计算时重新绑定对应的输入框的值

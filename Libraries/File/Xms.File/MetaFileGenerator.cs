@@ -26,6 +26,7 @@ namespace Xms.File
         private readonly IAppContext _appContext;
         private readonly IDataFinder _dataFinder;
         private readonly ILogService _logService;
+        
 
         public string mainEntityName = "Reimbursement";
         public string subEntityName = "ReimbursedDetail";
@@ -100,6 +101,7 @@ namespace Xms.File
             return fileCompletedName;
         }
 
+       
         /// <summary>
         /// 把文件生XML，PDF成出来，并生成数据包，同时保存到ZIP文件中。
         /// </summary>
@@ -130,7 +132,7 @@ namespace Xms.File
                 this.CreateRebursmentCertify(_logService,archiveInstructions.ArchiveItemInstance);
 
                 //设定压缩包文件名。
-                string destinationZipFilePath = System.AppDomain.CurrentDomain.BaseDirectory + @"_tempZip\" + archiveNO + ".zip";
+                string destinationZipFilePath = System.AppDomain.CurrentDomain.BaseDirectory + @"_tempZip\" + archiveNO + ".zzip";
 
                 //构建文件目录结构xml文件
                 List<FileInfo> files = this. GetAllFilesByDir(tempArchiveFolderPath);

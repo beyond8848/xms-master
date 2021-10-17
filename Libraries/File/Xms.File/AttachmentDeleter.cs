@@ -52,6 +52,34 @@ namespace Xms.File
             return _dataDeleter.Delete(EntityName, ids);
         }
 
+        public virtual bool DeleteByReimbursmentDetailAttach(Guid entityId, Guid objectId, Guid[] recordIds)
+        {
+            //查询
+            var query = new QueryExpression("ReimbursmentDetailAttach", _appContext.GetFeature<ICurrentUser>().UserSettings.LanguageId);
+            query.ColumnSet.AddColumns("attachmentid", "cdnpath");
+            query.Criteria.AddCondition("entityid", ConditionOperator.Equal, "0322DA55-9E6E-47D7-A55A-72A6AB1B1873");
+            query.Criteria.AddCondition("objectid", ConditionOperator.Equal, objectId);
+            var entities = _dataFinder.RetrieveAll(query);
+            var result = false;
+            if (entities.NotEmpty())
+            {
+                result = _dataDeleter.Delete("ReimbursmentDetailAttach", recordIds);
+                if (result)
+                {
+                    //delete files
+                    foreach (var item in entities)
+                    {
+                        var cdnPath = item.GetStringValue("cdnpath");
+                        if (cdnPath.IsNotEmpty() && System.IO.File.Exists(_webHelper.MapPath(cdnPath)))
+                        {
+                            System.IO.File.Delete(_webHelper.MapPath(cdnPath));
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+
         /// <summary>
         /// 删除记录
         /// </summary>
