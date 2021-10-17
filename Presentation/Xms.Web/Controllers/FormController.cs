@@ -478,5 +478,7 @@ namespace Xms.Web.Controllers
                 return Create(new EntityFormModel { EntityId = entityid, RecordId = recordid, FormId = formid, CopyId = copyid });
             //return RedirectToAction("create", new { entityid = entityid, recordid = recordid, formid = formid });
         }
+
+ 
     }
 }

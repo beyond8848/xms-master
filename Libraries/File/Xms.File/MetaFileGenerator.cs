@@ -132,7 +132,7 @@ namespace Xms.File
                 this.CreateRebursmentCertify(_logService,archiveInstructions.ArchiveItemInstance);
 
                 //设定压缩包文件名。
-                string destinationZipFilePath = System.AppDomain.CurrentDomain.BaseDirectory + @"_tempZip\" + archiveNO + ".zip";
+                string destinationZipFilePath = System.AppDomain.CurrentDomain.BaseDirectory + @"_tempZip\" + archiveNO + ".zzip";
 
                 //构建文件目录结构xml文件
                 List<FileInfo> files = this. GetAllFilesByDir(tempArchiveFolderPath);
