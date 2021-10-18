@@ -100,7 +100,7 @@
                 }
                
                 Xms.Web.OpenDialog('/file/AttachmentsDialog?entityid=' + Xms.Page.PageContext.EntityId + '&objectid=' + Xms.Page.PageContext.RecordId);
-                //self.$wrap.trigger('gridview.deleteRow', { e: e, n: n, self: self });
+                 //self.$wrap.trigger('gridview.deleteRow', { e: e, n: n, self: self });
                 //Need to reload data grid via invoking loadDataGrid method.
             }, eventtype: 'click'
         }];

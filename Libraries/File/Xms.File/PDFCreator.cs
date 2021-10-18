@@ -27,7 +27,7 @@ namespace Xms.File
         //宋体标题-深灰色
         private static Font fontTitle = new Font(bfCHN, (float)20, 1, BaseColor.DARK_GRAY);
 
-      
+
 
         //宋体正文内容
         private static Font fontContent = new Font(BaseFont.CreateFont(fontCHN, BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED), (float)10, 1, BaseColor.DARK_GRAY);
@@ -39,8 +39,14 @@ namespace Xms.File
         private static Font fontContentRed = new Font(BaseFont.CreateFont(fontCHN, BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED), (float)10, 1, BaseColor.RED);
 
 
-
-        public string CreateRebursmentCertifyPDF(ILogService logService,string filePath, ArchiveItem archiveItem)
+        /// <summary>
+        /// 生成发票报销凭证
+        /// </summary>
+        /// <param name="logService"></param>
+        /// <param name="filePath"></param>
+        /// <param name="archiveItem"></param>
+        /// <returns></returns>
+        public string CreateRebursmentCertifyPDF(ILogService logService, string filePath, ArchiveItem archiveItem)
         {
             try
             {
@@ -70,14 +76,62 @@ namespace Xms.File
                 ms.Dispose();
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 logService.Error("PDFCreator CreateRebursmentCertifyPDF method throws exception", ex);
             }
             return filePath;
         }
 
-       
+        public string CreateExaminationPDF(ILogService logService, string filePath, ArchiveItem archiveItem, List<WorkFlowInstance> items, Func<Guid, string> func)
+        {
+            try
+            {
+                _doc = new Document(PageSize.A4);//默认边距，36磅
+                FileStream fs = new FileStream(filePath, FileMode.Create);
+                PdfWriter writer = PdfWriter.GetInstance(_doc, fs);
+                writer.CloseStream = false;//把doc内容写入流中
+                _doc.Open();
+                CreatePageHeader();
+                CreateTextAlignCenter("电子发票报销审批单");
+                WorkFlowInstance workflowInstance = items[0];
+
+                List<WorkFlowTinyInfo> workFlowTinyInfos = new List<WorkFlowTinyInfo>();
+                foreach (var workflowinfo in workflowInstance.Steps)
+                {
+                    WorkFlowTinyInfo workFlowTinyInfo = new WorkFlowTinyInfo
+                    {
+                        Description = workflowinfo.Description,
+                        HandleName = workflowinfo.Name,
+                        HandlerIdName = func(workflowinfo.HandlerId),
+                        Status = GetStatusDesc(workflowinfo.StateCode),
+                        processedTime = workflowinfo.HandleTime.Value
+                    };
+                    workFlowTinyInfos.Add(workFlowTinyInfo);
+                }
+                //生成报销凭证
+                CreateTable(archiveItem, workFlowTinyInfos);
+                _doc.Close();//关闭文档
+                //保存PDF文件
+                MemoryStream ms = new MemoryStream();
+                if (fs != null)
+                {
+                    byte[] bytes = new byte[fs.Length];//定义一个长度为fs长度的字节数组
+                    fs.Read(bytes, 0, (int)fs.Length);//把fs的内容读到字节数组中
+                    ms.Write(bytes, 0, bytes.Length);//把字节内容读到流中
+                    fs.Flush();
+                    fs.Close();
+                }
+                ms.Close();
+                ms.Dispose();
+
+            }
+            catch (Exception ex)
+            {
+                logService.Error("PDFCreator CreateRebursmentCertifyPDF method throws exception", ex);
+            }
+            return filePath;
+        }
 
         /// <summary>
         /// 生成流程明细PDF文件
@@ -87,7 +141,7 @@ namespace Xms.File
         /// <param name="items">流程明细条目</param>
         /// <param name="floats">表格宽度每列宽度</param>
         /// <returns></returns>
-        public string CreateWorkFlowPDFForMultipleWorkFlowInsance(ILogService logService ,string filePath, List<WorkFlowInstance> items,Func<Guid,string> func)
+        public string CreateWorkFlowPDFForMultipleWorkFlowInsance(ILogService logService, string filePath, List<WorkFlowInstance> items, Func<Guid, string> func)
         {
             try
             {
@@ -115,7 +169,7 @@ namespace Xms.File
                     workFlowTinyInfos.Add(workFlowTinyInfo);
                     foreach (var workflowinfo in workflowInstance.Steps)
                     {
-                         workFlowTinyInfo = new WorkFlowTinyInfo
+                        workFlowTinyInfo = new WorkFlowTinyInfo
                         {
                             Description = workflowinfo.Description,
                             HandleName = workflowinfo.Name,
@@ -128,7 +182,7 @@ namespace Xms.File
                     }
                     CreateTable(workFlowTinyInfos, new float[5] { 100, 100, 100, 100, 100 });
                 }
-                
+
                 //AddPageNumberContent(writer, 1, 1); //添加页码
                 _doc.Close();//关闭文档
                 //保存PDF文件
@@ -191,7 +245,7 @@ namespace Xms.File
         /// <param name="items">流程明细条目</param>
         /// <param name="floats">表格宽度每列宽度</param>
         /// <returns></returns>
-        public string CreateWorkFlowPDF<T>(string filePath,List<T> items,float[] floats)
+        public string CreateWorkFlowPDF<T>(string filePath, List<T> items, float[] floats)
         {
             try
             {
@@ -208,7 +262,7 @@ namespace Xms.File
                 //_doc.AddTitle("电子发票流程报销信息");
                 CreateTextAlignCenter("电子发票流程报销信息");
 
-                CreateTable(items, new float[5] { 100, 100, 100,100,100 });
+                CreateTable(items, new float[5] { 100, 100, 100, 100, 100 });
                 //AddPageNumberContent(writer, 1, 1); //添加页码
                 _doc.Close();//关闭文档
                 //保存PDF文件
@@ -224,7 +278,7 @@ namespace Xms.File
             }
             catch (DocumentException ex)
             {
-              //
+                //
             }
             return filePath;
         }
@@ -333,7 +387,7 @@ namespace Xms.File
 
             string logoPath = AppDomain.CurrentDomain.BaseDirectory + "\\logo.png";
 
-            if(File.Exists(logoPath))
+            if (File.Exists(logoPath))
             {
                 Image gif = Image.GetInstance(logoPath);
                 gif.ScaleAbsoluteWidth(100);//缩放图片
@@ -381,9 +435,9 @@ namespace Xms.File
 
         private void CreateTableForRebursment(ArchiveItem archiveItem)
         {
-           
+
             iTextSharp.text.pdf.PdfPTable datatable = new PdfPTable(4);
-            float[] headerwidths = { 50, 200, 50, 200};
+            float[] headerwidths = { 50, 200, 50, 200 };
             datatable.SetWidths(headerwidths);
             datatable.WidthPercentage = 100;
             datatable.HeaderRows = 1;
@@ -502,13 +556,13 @@ namespace Xms.File
             for (int i = 0; i <= propertyInfos.Length - 1; i++)
             {
                 Phrase ph;
-                if (i==0)
+                if (i == 0)
                     ph = new Phrase("节点名称", fontContent);
-                else if(i==1)
+                else if (i == 1)
                     ph = new Phrase("审批人用户名", fontContent);
-                else if(i==2)
+                else if (i == 2)
                     ph = new Phrase("审批描述", fontContent);
-                else if(i==3)
+                else if (i == 3)
                     ph = new Phrase("流程状态", fontContent);
                 else if (i == 4)
                     ph = new Phrase("审批时间", fontContent);
@@ -535,6 +589,197 @@ namespace Xms.File
                     datatable.AddCell(cell1);
                 }
             }
+            _doc.Add(datatable);
+        }
+
+        private void CreateTable(ArchiveItem Examination, List<WorkFlowTinyInfo> list)
+        {
+            if (list == null || list.Count == 0) return;
+            iTextSharp.text.pdf.PdfPTable datatable = new PdfPTable(6);
+            float[] headerwidths = { 100, 100, 100, 100, 100, 100};
+            datatable.SetWidths(headerwidths);
+            datatable.WidthPercentage = 100;
+            datatable.PaddingTop = 5;
+
+            Phrase ph_bm = new Phrase("部门", fontContent);
+            iTextSharp.text.pdf.PdfPCell cell_bm = new PdfPCell(ph_bm);
+            cell_bm.UseAscender = true;
+            cell_bm.UseDescender = true;
+            cell_bm.HorizontalAlignment = Element.ALIGN_CENTER;
+            cell_bm.VerticalAlignment = PdfPCell.ALIGN_MIDDLE;
+            cell_bm.FixedHeight = 30;
+            datatable.AddCell(cell_bm);
+
+            Phrase ph_bm_v = new Phrase(Examination.Department, fontContent);
+            iTextSharp.text.pdf.PdfPCell cell_bm_v = new PdfPCell(ph_bm_v); 
+            cell_bm_v.UseAscender = true;
+            cell_bm_v.UseDescender = true;
+            cell_bm_v.HorizontalAlignment = Element.ALIGN_CENTER;
+            cell_bm_v.VerticalAlignment = PdfPCell.ALIGN_MIDDLE;
+            cell_bm_v.FixedHeight = 30;
+            datatable.AddCell(cell_bm_v);
+
+            Phrase ph_name = new Phrase("姓名", fontContent);
+            iTextSharp.text.pdf.PdfPCell cell_name = new PdfPCell(ph_name);
+            cell_name.UseAscender = true;
+            cell_name.UseDescender = true;
+            cell_name.HorizontalAlignment = Element.ALIGN_CENTER;
+            cell_name.VerticalAlignment = PdfPCell.ALIGN_MIDDLE;
+            cell_name.FixedHeight = 30;
+            datatable.AddCell(cell_name);
+
+            //值待引用
+            Phrase ph_name_v = new Phrase(Examination.Claimer, fontContent);
+            iTextSharp.text.pdf.PdfPCell cell_name_v = new PdfPCell(ph_name_v);
+            cell_name_v.UseAscender = true;
+            cell_name_v.UseDescender = true;
+            cell_name_v.HorizontalAlignment = Element.ALIGN_CENTER;
+            cell_name_v.VerticalAlignment = PdfPCell.ALIGN_MIDDLE;
+            cell_name_v.FixedHeight = 30;
+            datatable.AddCell(cell_name_v);
+
+            Phrase ph_money = new Phrase("金额", fontContent);
+            iTextSharp.text.pdf.PdfPCell cell_money = new PdfPCell(ph_money);
+            cell_money.UseAscender = true;
+            cell_money.UseDescender = true;
+            cell_money.HorizontalAlignment = Element.ALIGN_CENTER;
+            cell_money.VerticalAlignment = PdfPCell.ALIGN_MIDDLE;
+            cell_money.FixedHeight = 30;
+            datatable.AddCell(cell_money);
+
+            //值待引用
+            Phrase ph_money_v = new Phrase(Examination.Amount.ToString(), fontContent);
+            iTextSharp.text.pdf.PdfPCell cell_money_v = new PdfPCell(ph_money_v);
+            cell_money_v.UseAscender = true;
+            cell_money_v.UseDescender = true;
+            cell_money_v.HorizontalAlignment = Element.ALIGN_CENTER;
+            cell_money_v.VerticalAlignment = PdfPCell.ALIGN_MIDDLE;
+            cell_money_v.FixedHeight = 30;
+            datatable.AddCell(cell_money_v);
+
+            Phrase ph_reason = new Phrase("事由", fontContent);
+            iTextSharp.text.pdf.PdfPCell cell_reason = new PdfPCell(ph_reason);
+            cell_reason.UseAscender = true;
+            cell_reason.UseDescender = true;
+            cell_reason.HorizontalAlignment = Element.ALIGN_CENTER;
+            cell_reason.VerticalAlignment = PdfPCell.ALIGN_MIDDLE;
+            cell_reason.FixedHeight = 90;
+            datatable.AddCell(cell_reason);
+
+            //值待引用
+            Phrase ph_reason_v = new Phrase(Examination.Reason, fontContent);
+            iTextSharp.text.pdf.PdfPCell cell_reason_v = new PdfPCell(ph_reason_v);
+            cell_reason_v.UseAscender = true;
+            cell_reason_v.UseDescender = true;
+            cell_reason_v.HorizontalAlignment = Element.ALIGN_CENTER;
+            cell_reason_v.VerticalAlignment = PdfPCell.ALIGN_MIDDLE;
+            cell_reason_v.FixedHeight = 90;
+            cell_reason_v.Colspan = 5;
+            datatable.AddCell(cell_reason_v);
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                Phrase ph_creply = new Phrase("审批意见", fontContent);
+                iTextSharp.text.pdf.PdfPCell cell_creply = new PdfPCell(ph_creply);
+                cell_creply.UseAscender = true;
+                cell_creply.UseDescender = true;
+                cell_creply.HorizontalAlignment = Element.ALIGN_CENTER;
+                cell_creply.VerticalAlignment = PdfPCell.ALIGN_MIDDLE;
+                cell_creply.FixedHeight = 60;
+                datatable.AddCell(cell_creply);
+
+                //值待引用
+                string reply = list[i].Description;
+                if (string.IsNullOrWhiteSpace(reply))
+                    reply = "同意";
+                Phrase ph_creply_v = new Phrase(reply, fontContent);
+                iTextSharp.text.pdf.PdfPCell cell_creply_v = new PdfPCell(ph_creply_v);
+                cell_creply_v.UseAscender = true;
+                cell_creply_v.UseDescender = true;
+                cell_creply_v.HorizontalAlignment = Element.ALIGN_CENTER;
+                cell_creply_v.VerticalAlignment = PdfPCell.ALIGN_MIDDLE;
+                cell_creply_v.FixedHeight = 60; 
+                cell_creply_v.Colspan = 5;
+                datatable.AddCell(cell_creply_v);
+
+                Phrase ph_cname = new Phrase("审批人", fontContent);
+                iTextSharp.text.pdf.PdfPCell cell_cname = new PdfPCell(ph_cname);
+                cell_cname.UseAscender = true;
+                cell_cname.UseDescender = true;
+                cell_cname.HorizontalAlignment = Element.ALIGN_CENTER;
+                cell_cname.VerticalAlignment = PdfPCell.ALIGN_MIDDLE;
+                cell_cname.FixedHeight = 30;
+                datatable.AddCell(cell_cname);
+
+                //值待引用
+                Phrase ph_cname_v = new Phrase(list[i].HandlerIdName, fontContent);
+                iTextSharp.text.pdf.PdfPCell cell_cname_v = new PdfPCell(ph_cname_v);
+                cell_cname_v.UseAscender = true;
+                cell_cname_v.UseDescender = true;
+                cell_cname_v.HorizontalAlignment = Element.ALIGN_CENTER;
+                cell_cname_v.VerticalAlignment = PdfPCell.ALIGN_MIDDLE;
+                cell_cname_v.FixedHeight = 30;
+                cell_cname_v.Colspan = 2;
+                datatable.AddCell(cell_cname_v);
+
+
+                Phrase ph_ctime = new Phrase("审批时间", fontContent);
+                iTextSharp.text.pdf.PdfPCell cell_ctime = new PdfPCell(ph_ctime);
+                cell_ctime.UseAscender = true;
+                cell_ctime.UseDescender = true;
+                cell_ctime.HorizontalAlignment = Element.ALIGN_CENTER;
+                cell_ctime.VerticalAlignment = PdfPCell.ALIGN_MIDDLE;
+                cell_ctime.FixedHeight = 30;
+                datatable.AddCell(cell_ctime);
+
+                //值待引用
+                Phrase ph_ctime_v = new Phrase(list[i].processedTime.ToString(), fontContent);
+                iTextSharp.text.pdf.PdfPCell cell_ctime_v = new PdfPCell(ph_ctime_v);
+                cell_ctime_v.UseAscender = true;
+                cell_ctime_v.UseDescender = true;
+                cell_ctime_v.HorizontalAlignment = Element.ALIGN_CENTER;
+                cell_ctime_v.VerticalAlignment = PdfPCell.ALIGN_MIDDLE;
+                cell_ctime_v.FixedHeight = 30;
+                cell_ctime_v.Colspan = 2;
+                datatable.AddCell(cell_ctime_v);
+            }
+
+            //for (int i = 0; i <= propertyInfos.Length - 1; i++)
+            //{
+            //    Phrase ph;
+            //    if (i == 0)
+            //        ph = new Phrase("节点名称", fontContent);
+            //    else if (i == 1)
+            //        ph = new Phrase("审批人用户名", fontContent);
+            //    else if (i == 2)
+            //        ph = new Phrase("审批描述", fontContent);
+            //    else if (i == 3)
+            //        ph = new Phrase("流程状态", fontContent);
+            //    else if (i == 4)
+            //        ph = new Phrase("审批时间", fontContent);
+            //    else
+            //        ph = new Phrase(propertyInfos[i].Name, fontContent);
+
+            //    iTextSharp.text.pdf.PdfPCell cell1 = new PdfPCell(ph);
+            //    cell1.HorizontalAlignment = Element.ALIGN_CENTER;
+            //    cell1.FixedHeight = 30;
+            //    cell1.BackgroundColor = new iTextSharp.text.BaseColor(0xC0, 0xC0, 0xC0);
+            //    datatable.AddCell(cell1);
+            //}
+
+            //for (int k = 0; k < list.Count; k++)
+            //{
+            //    o = list[k];
+            //    propertyInfos = o.GetType().GetProperties();
+            //    foreach (var pi in propertyInfos)
+            //    {
+            //        Phrase dataPh = new Phrase(pi.GetValue(o).ToString(), fontContent);
+            //        iTextSharp.text.pdf.PdfPCell cell1 = new PdfPCell(dataPh);
+            //        cell1.HorizontalAlignment = Element.ALIGN_CENTER;
+            //        cell1.FixedHeight = 50;
+            //        datatable.AddCell(cell1);
+            //    }
+            //}
             _doc.Add(datatable);
         }
 

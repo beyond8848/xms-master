@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="iTextSharp" Version="5.5.13.2" />
+    <PackageReference Include="OfdSharp" Version="1.0.0.3" />
     <PackageReference Include="System.IO.Compression" Version="4.3.0" />
   </ItemGroup>
 

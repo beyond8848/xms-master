@@ -43,7 +43,13 @@ namespace Xms.Core.Data
 
         public string IdName
         {
-            get { return _idName.IfEmpty(Name + "id"); }
+            get
+            {
+                if (Name == "Roles")
+                    return "Roleid";
+                else
+                    return _idName.IfEmpty(Name + "id");
+            }
             set { _idName = value; }
         }
 

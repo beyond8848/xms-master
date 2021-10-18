@@ -9,6 +9,7 @@ using Xms.Core.Data;
 using Xms.File.Extensions;
 using Xms.Identity;
 using Xms.Infrastructure.Utility;
+using Xms.Logging.AppLog;
 using Xms.OCR;
 using Xms.Sdk.Abstractions;
 using Xms.Sdk.Abstractions.Query;
@@ -25,18 +26,21 @@ namespace Xms.File
         private readonly IWebHelper _webHelper;
         private readonly ISettingFinder _settingFinder;
         private readonly IDataFinder _dataFinder;
+        private readonly ILogService _logService;
 
         public AttachmentCreater(IAppContext appContext
             , IDataCreater dataCreater
             , IWebHelper webHelper
             , IDataFinder dataFinder
-            , ISettingFinder settingFinder)
+            , ISettingFinder settingFinder
+            ,ILogService logService)
             : base(appContext)
         {
             _dataCreater = dataCreater;
             _webHelper = webHelper;
             _settingFinder = settingFinder;
             _dataFinder = dataFinder;
+            _logService = logService;
         }
 
         /// <summary>
@@ -109,7 +113,7 @@ namespace Xms.File
                         string fileName = id.ToString() + System.IO.Path.GetExtension(file.FileName);
                         string savePath = dir + fileName;
                         await file.SaveAs(savePath, _settingFinder, _webHelper).ConfigureAwait(false);
-                        Entity ent = new Entity("ReimbursmentDetailAttach")
+                        Entity ent = new Entity("Attachment")
                         .SetIdValue(id)
                          .SetAttributeValue("name", file.FileName)
                         .SetAttributeValue("filesize", file.Length)
@@ -203,74 +207,155 @@ namespace Xms.File
                         
                         attachments.Add(ent);
 
-                        //这里加上OCR识别逻辑////////////////////////////////////////////////////////////////.
-                        //识别完之后，加入到发票明细表中，同时调用ajax刷新明细表页面。
-                        Invoice invoice = func(savePath);
-                        NormalInvoice ni = invoice.Normal;
-                        
+                        if (fileName.Substring(fileName.Length - 4) == ".pdf"
+                            || fileName.Substring(fileName.Length - 4) == ".jpg"
+                            || fileName.Substring(fileName.Length - 4) == ".png"
+                            || fileName.Substring(fileName.Length - 5) == ".jpeg")
+                        {
+                            //这里加上OCR识别逻辑////////////////////////////////////////////////////////////////.
+                            //识别完之后，加入到发票明细表中，同时调用ajax刷新明细表页面。
+                            Invoice invoice = func(savePath);
+                            NormalInvoice @in = invoice.Normal;
+                            if (@in != null && @in.PriceTaxTotal_Num != null && !IsNum(@in.PriceTaxTotal_Num))
+                            {
+                                @in.PriceTaxTotal_Num = @in.PriceTaxTotal_Num.Replace("￥", "").Replace(" ", "");
+                            }
+                            else
+                            {
+                                //ni = new NormalInvoice
+                                //{
+                                //    InvoicingDate = System.DateTime.Now.ToString(),
+                                //    Title = string.Empty,
+                                //    PriceTaxTotal_Num = "0"
+                                //};
+                            }
+                            string serviceName;
+                            if (@in.Items.Count != 0)
+                                serviceName = @in.Items[0].Trade;
+                            else
+                                serviceName = "";
+                            Entity ent2 = new Entity("ReimbursedDetail")
+                            .SetIdValue(id)
+                            //地点 not null
+                            .SetAttributeValue("Address", "")
+                            //数量 not null
+                            .SetAttributeValue("Amount", 1)
+                            //创建者
+                            .SetAttributeValue("CreatedBy", new EntityReference("systemuser", _appContext.GetFeature<ICurrentUser>().SystemUserId))
+                            //创建日期
+                            .SetAttributeValue("CreatedOn", DateTime.Now)
+                            //结束时间 not null
+                            .SetAttributeValue("FeeEndTime", Convert.ToDateTime(@in.InvoicingDate))
+                            //开始时间 not null
+                            .SetAttributeValue("FeeStartTime", Convert.ToDateTime(@in.InvoicingDate))
+                            .SetAttributeValue("InvoiceDate", Convert.ToDateTime(@in.InvoicingDate))
+                            //金额 not null
+                            .SetAttributeValue("MoneyAmount", new Money(Convert.ToDecimal(@in.PriceTaxTotal_Num)))
+                            //名称 
+                            .SetAttributeValue("Name", serviceName)
+                            //组织
+                            .SetAttributeValue("OrganizationId", new EntityReference("organization", _appContext.GetFeature<ICurrentUser>().OrganizationId))
+                            //所有者
+                            .SetAttributeValue("OwnerId", new OwnerObject(OwnerTypes.SystemUser, _appContext.GetFeature<ICurrentUser>().SystemUserId))
+                            //所有者类型
+                            .SetAttributeValue("OwnerIdType", 1)
+                            //所有者部门 not null
+                            .SetAttributeValue("OwningBusinessUnit", new EntityReference("businessunit", _appContext.GetFeature<ICurrentUser>().BusinessUnitId))
+                            //报销明细 主键 
+                            //.SetAttributeValue("ReimbursedDetailId", System.Guid.NewGuid().ToString())
+                            //报销类型 not null
+                            .SetAttributeValue("ReimbursedType", "1")
+                            //报销单 not null
+                            .SetAttributeValue("ReimbursementId", new EntityReference("Reimbursement", objectId))
+                            //状态
+                            .SetAttributeValue("StateCode", "1")
+                            //状态描述
+                            .SetAttributeValue("StatusCode", "0")
+                            //单价 not null
+                            //.SetAttributeValue("UnitFee", "")
+                            .SetAttributeValue("AssociatedFilePath", savePath)
+                            .SetAttributeValue("InvoiceCode", @in.InvoiceNo)
+                            .SetAttributeValue("InvoiceDM", @in.InvoiceID)
+                            .SetAttributeValue("ArchiveNo", "")
+                            .SetAttributeValue("ServiceName",serviceName)
+                            .SetAttributeValue("Seller", @in.Seller.Name)
+                            .SetAttributeValue("Buyer", @in.Buyer.Name);
+                            reimbursedDetails.Add(ent2);
+                        }
                         //if(this.VerifyInvoiceNoExisits(ni.InvoiceNo))
                         //{
                         //    string errorInfo = "改发票号码:" + ni.InvoiceNo + "已经存在或者已报销过！";
                         //    func1(errorInfo);
                         //    continue;
                         //}
+                        else if (fileName.Substring(fileName.Length - 4) == ".ofd")
+                        {
+                            try
+                            {
 
-                        if(ni!=null &&ni.PriceTaxTotal_Num!=null && !IsNum(ni.PriceTaxTotal_Num))
-                        {
-                            ni.PriceTaxTotal_Num = ni.PriceTaxTotal_Num.Replace("￥", "").Replace(" ", "");
+                                OfdSharp.Reader.OfdReader reader = new OfdSharp.Reader.OfdReader(savePath);
+                                OfdSharp.Core.Invoice.InvoiceInfo @in = reader.GetInvoiceInfo();
+
+                                string serviceName;
+                                if (@in.GoodsInfos.Count != 0)
+                                    serviceName = @in.GoodsInfos[0].Item;
+                                else
+                                    serviceName = "";
+
+                                Entity ent2 = new Entity("ReimbursedDetail")
+                            .SetIdValue(id)
+                            //地点 not null
+                            .SetAttributeValue("Address", "")
+                            //数量 not null
+                            .SetAttributeValue("Amount", 1)
+                            //创建者
+                            .SetAttributeValue("CreatedBy", new EntityReference("systemuser", _appContext.GetFeature<ICurrentUser>().SystemUserId))
+                            //创建日期
+                            .SetAttributeValue("CreatedOn", DateTime.Now)
+                            //结束时间 not null
+                            .SetAttributeValue("FeeEndTime", Convert.ToDateTime(@in.IssueDate))
+                            //开始时间 not null
+                            .SetAttributeValue("FeeStartTime", Convert.ToDateTime(@in.IssueDate))
+                            .SetAttributeValue("InvoiceDate", Convert.ToDateTime(@in.IssueDate))
+                            //金额 not null
+                            .SetAttributeValue("MoneyAmount", new Money(Convert.ToDecimal(@in.TaxInclusiveTotalAmount)))
+                            //名称 
+                            .SetAttributeValue("Name", serviceName)
+                            //组织
+                            .SetAttributeValue("OrganizationId", new EntityReference("organization", _appContext.GetFeature<ICurrentUser>().OrganizationId))
+                            //所有者
+                            .SetAttributeValue("OwnerId", new OwnerObject(OwnerTypes.SystemUser, _appContext.GetFeature<ICurrentUser>().SystemUserId))
+                            //所有者类型
+                            .SetAttributeValue("OwnerIdType", 1)
+                            //所有者部门 not null
+                            .SetAttributeValue("OwningBusinessUnit", new EntityReference("businessunit", _appContext.GetFeature<ICurrentUser>().BusinessUnitId))
+                            //报销明细 主键 
+                            //.SetAttributeValue("ReimbursedDetailId", System.Guid.NewGuid().ToString())
+                            //报销类型 not null
+                            .SetAttributeValue("ReimbursedType", "1")
+                            //报销单 not null
+                            .SetAttributeValue("ReimbursementId", new EntityReference("Reimbursement", objectId))
+                            //状态
+                            .SetAttributeValue("StateCode", "1")
+                            //状态描述
+                            .SetAttributeValue("StatusCode", "0")
+                            //单价
+                            //.SetAttributeValue("UnitFee", "")
+                            .SetAttributeValue("AssociatedFilePath", savePath)
+                            .SetAttributeValue("InvoiceCode", @in.InvoiceNo)
+                            .SetAttributeValue("InvoiceDM", @in.InvoiceCode)
+                            .SetAttributeValue("ServiceName",serviceName)
+                            .SetAttributeValue("ArchiveNo", "")
+                            .SetAttributeValue("Seller", @in.Seller.SellerName)
+                            .SetAttributeValue("Buyer", @in.Buyer.BuyerName);
+                                reimbursedDetails.Add(ent2);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logService.Error(ex);
+                            }
                         }
-                        else
-                        {
-                            //ni = new NormalInvoice
-                            //{
-                            //    InvoicingDate = System.DateTime.Now.ToString(),
-                            //    Title = string.Empty,
-                            //    PriceTaxTotal_Num = "0"
-                            //};
-                        }
-                        Entity ent2 = new Entity("ReimbursedDetail")
-                       .SetIdValue(id)
-                       //地点 not null
-                       .SetAttributeValue("Address", "")
-                       //数量 not null
-                       .SetAttributeValue("Amount", 1)
-                       //创建者
-                       .SetAttributeValue("CreatedBy", new EntityReference("systemuser", _appContext.GetFeature<ICurrentUser>().SystemUserId))
-                       //创建日期
-                       .SetAttributeValue("CreatedOn", DateTime.Now)
-                       //结束时间 not null
-                       .SetAttributeValue("FeeEndTime", Convert.ToDateTime(ni.InvoicingDate))
-                       //开始时间 not null
-                       .SetAttributeValue("FeeStartTime",Convert.ToDateTime(ni.InvoicingDate))
-                       //金额 not null
-                       .SetAttributeValue("MoneyAmount", new Money(Convert.ToDecimal(ni.PriceTaxTotal_Num)))
-                       //名称 
-                       .SetAttributeValue("Name",ni.Title)
-                       //组织
-                       .SetAttributeValue("OrganizationId", new EntityReference("organization", _appContext.GetFeature<ICurrentUser>().OrganizationId))
-                       //所有者
-                       .SetAttributeValue("OwnerId", new OwnerObject(OwnerTypes.SystemUser, _appContext.GetFeature<ICurrentUser>().SystemUserId))
-                       //所有者类型
-                       .SetAttributeValue("OwnerIdType", 1)
-                       //所有者部门 not null
-                       .SetAttributeValue("OwningBusinessUnit", new EntityReference("businessunit", _appContext.GetFeature<ICurrentUser>().BusinessUnitId))
-                       //报销明细 主键 
-                       //.SetAttributeValue("ReimbursedDetailId", System.Guid.NewGuid().ToString())
-                       //报销类型 not null
-                       .SetAttributeValue("ReimbursedType", "1")
-                       //报销单 not null
-                       .SetAttributeValue("ReimbursementId", new EntityReference("Reimbursement", objectId))
-                       //状态
-                       .SetAttributeValue("StateCode", "1")
-                       //状态描述
-                       .SetAttributeValue("StatusCode", "0")
-                       //单价 not null
-                       .SetAttributeValue("UnitFee", 1.00)
-                       .SetAttributeValue("AssociatedFilePath", savePath)
-                       .SetAttributeValue("InvoiceCode", ni.InvoiceNo)
-                       .SetAttributeValue("InvoiceDM",ni.InvoiceID)
-                       .SetAttributeValue("ArchiveNo", "");
-                        reimbursedDetails.Add(ent2);
+
                         ////////////////////////////////////////////////////////////////////////////////////
                     }
                 }
