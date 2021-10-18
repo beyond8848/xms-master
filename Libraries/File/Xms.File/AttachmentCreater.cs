@@ -278,8 +278,8 @@ namespace Xms.File
                             .SetAttributeValue("InvoiceDM", @in.InvoiceID)
                             .SetAttributeValue("ArchiveNo", "")
                             .SetAttributeValue("ServiceName",serviceName)
-                            .SetAttributeValue("Seller", @in.Seller.Name)
-                            .SetAttributeValue("Buyer", @in.Buyer.Name);
+                            .SetAttributeValue("Seller", @in.Seller!=null? @in.Seller.Name:"")
+                            .SetAttributeValue("Buyer", @in.Buyer!=null? @in.Buyer.Name:"");
                             reimbursedDetails.Add(ent2);
                         }
                         //if(this.VerifyInvoiceNoExisits(ni.InvoiceNo))
