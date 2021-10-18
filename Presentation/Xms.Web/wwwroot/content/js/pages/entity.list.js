@@ -434,7 +434,7 @@
                 }
             } else {
                 for (var i = datas.buttonsinfo.length - 1; i >= 0; i--) {
-                    if (datas.buttonsinfo[i]["label"] == "归档" ) {
+                    if (datas.buttonsinfo[i]["label"] == "归档" || datas.buttonsinfo[i]["label"] == "上传回执单" ) {
                         datas.buttonsinfo.splice(i, 1);
                     }
                 }
