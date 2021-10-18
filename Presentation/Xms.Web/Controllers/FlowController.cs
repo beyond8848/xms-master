@@ -138,13 +138,15 @@ namespace Xms.Web.Controllers
             }
             else if (model.StateCode == 2)
             {
-                var result = _workFlowProcessFinder.QueryHandledList(CurrentUser.SystemUserId, model.Page, model.PageSize, model.EntityId);
+                var result = _workFlowProcessFinder.QueryApplyHandlingList(CurrentUser.SystemUserId, model.Page, model.PageSize, model.EntityId);
+               // var result = _workFlowProcessFinder.QueryHandledList(CurrentUser.SystemUserId, model.Page, model.PageSize, model.EntityId);
                 model.Items = result.Items;
                 model.TotalItems = result.TotalItems;
             }
             else if (model.StateCode == 0)
             {
-                var result = _workFlowProcessFinder.QueryApplyHandlingList(CurrentUser.SystemUserId, model.Page, model.PageSize, model.EntityId);
+                var result = _workFlowProcessFinder.QueryHandledList(CurrentUser.SystemUserId, model.Page, model.PageSize, model.EntityId);
+                //var result = _workFlowProcessFinder.QueryApplyHandlingList(CurrentUser.SystemUserId, model.Page, model.PageSize, model.EntityId);
                 model.Items = result.Items;
                 model.TotalItems = result.TotalItems;
             }
