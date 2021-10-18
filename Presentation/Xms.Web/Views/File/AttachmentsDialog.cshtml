@@ -37,6 +37,7 @@
                             <form class="form-horizontal" action="@("/"+app.OrganizationUniqueName)/file/Create" method="post" enctype="multipart/form-data">
                                 <input type="hidden" name="entityid" value="@Model.EntityId" />
                                 <input type="hidden" name="objectid" value="@Model.ObjectId" />
+                                <input type="hidden" name="flag" value="@ViewData["Flag"]" />
                                 <div class="form-group col-sm-12">
                                     <label class="col-sm-2 control-label" for="description">附件</label>
                                     <div class="col-sm-10">
