@@ -109,7 +109,7 @@ namespace Xms.File
                         string fileName = id.ToString() + System.IO.Path.GetExtension(file.FileName);
                         string savePath = dir + fileName;
                         await file.SaveAs(savePath, _settingFinder, _webHelper).ConfigureAwait(false);
-                        Entity ent = new Entity("ReimbursmentDetailAttach")
+                        Entity ent = new Entity("Attachment")
                         .SetIdValue(id)
                          .SetAttributeValue("name", file.FileName)
                         .SetAttributeValue("filesize", file.Length)
