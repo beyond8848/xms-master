@@ -111,12 +111,12 @@
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="dLabel">
 
-                            <li><a data-href="@("/"+app.OrganizationUniqueName)/user/usersettings" onclick="takeToBottom(this)" data-id="page-setting" data-name="@app.T["usersettings"]" target="pageViewName" title="@app.T["usersettings"]"><span class="glyphicon glyphicon-cog"></span> @app.T["usersettings"]</a></li>
+                            @*<li><a data-href="@("/"+app.OrganizationUniqueName)/user/usersettings" onclick="takeToBottom(this)" data-id="page-setting" data-name="@app.T["usersettings"]" target="pageViewName" title="@app.T["usersettings"]"><span class="glyphicon glyphicon-cog"></span> @app.T["usersettings"]</a></li>*@
                             @if (app.CurrentUser.IsSuperAdmin)
                             {
                                 <li><a href="@("/"+app.OrganizationUniqueName)/customize/index" target="_parent"><span class="glyphicon glyphicon-asterisk"></span> 开发平台</a></li>
                             }
-                            <li><a href="@("/"+app.OrganizationUniqueName)/user/ResetMyPassword" target="pageViewName" data-name="@app.T["password"]" onclick="takeToBottom(this)" data-id="page-resetPassword" title="@app.T["password"]"><span class="glyphicon glyphicon-lock"></span> @app.T["password"]</a></li>
+                            @*<li><a href="@("/"+app.OrganizationUniqueName)/user/ResetMyPassword" target="pageViewName" data-name="@app.T["password"]" onclick="takeToBottom(this)" data-id="page-resetPassword" title="@app.T["password"]"><span class="glyphicon glyphicon-lock"></span> @app.T["password"]</a></li>*@
                             <li role="separator" class="divider"></li>
                             <li><a href="@("/"+app.OrganizationUniqueName)/account/signout" title="@app.T["signout"]"><span class="glyphicon glyphicon-log-out"></span> @app.T["signout"]</a></li>
                         </ul>
@@ -171,7 +171,7 @@
     </div>
     <div class="page-wrap">
         <div class="page-content" id="page-content" style="">
-            <iframe src="@((app.CurrentUser.UserSettings.HomePageArea.IsNotEmpty() ? (app.CurrentUser.UserSettings.HomePageArea.IndexOf("/" + app.OrganizationUniqueName) >= 0 ? app.CurrentUser.UserSettings.HomePageArea : "/"+ app.OrganizationUniqueName + app.CurrentUser.UserSettings.HomePageArea) : "/"+ app.OrganizationUniqueName + "/component/renderdashboard"))" id="pageView" name="pageViewName" class="ifrmae-list" width="100%" frameborder="0" onload="Javascript: iframeReady(this)" scrolling="auto"></iframe>
+            <iframe src="@((app.CurrentUser.UserSettings.HomePageArea.IsNotEmpty() ? (app.CurrentUser.UserSettings.HomePageArea.IndexOf("/" + app.OrganizationUniqueName) >= 0 ? app.CurrentUser.UserSettings.HomePageArea : "/"+ app.OrganizationUniqueName + app.CurrentUser.UserSettings.HomePageArea) : "/"+ app.OrganizationUniqueName + "/flow/workflowstatelist"))" id="pageView" name="pageViewName" class="ifrmae-list" width="100%" frameborder="0" onload="Javascript: iframeReady(this)" scrolling="auto"></iframe>
         </div>
     </div>
 

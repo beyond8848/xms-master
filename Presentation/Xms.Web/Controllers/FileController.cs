@@ -121,6 +121,8 @@ namespace Xms.Web.Controllers
             var result = _attachmentFinder.FindById(id);
             if (result.IsEmpty())
             {
+                result = _attachmentFinder.FindReimbursmentAttachById(id);
+                if(result.IsEmpty())
                 return NotFound();
             }
             var filePath = result.GetStringValue("cdnpath");
@@ -286,7 +288,37 @@ namespace Xms.Web.Controllers
             normalInvoice.PriceTaxTotal_CHS = normalInvoice1.PriceTaxTotal_CHS;
             normalInvoice.PriceTaxTotal_Num = normalInvoice1.PriceTaxTotal_Num;
             normalInvoice.Recipient = normalInvoice1.Recipient;
-            //normalInvoice.Seller = normalInvoice1.Seller;
+            normalInvoice.Seller = new Company
+            {
+                Bank_ID = normalInvoice1.Seller.Bank_ID,
+                Identification = normalInvoice1.Seller.Identification,
+                Location_Tel = normalInvoice1.Seller.Location_Tel
+            };
+
+            normalInvoice.Buyer = new Company
+            {
+                Bank_ID = normalInvoice1.Buyer.Bank_ID,
+                Identification = normalInvoice1.Buyer.Identification,
+                Location_Tel = normalInvoice1.Buyer.Location_Tel,
+                Name = normalInvoice1.Buyer.Name
+            };
+
+            List<Project> items = new List<Project>();
+            foreach(var pro in normalInvoice1.Items)
+            {
+                Project p = new Project
+                {
+                    Count = pro.Count,
+                    Sum = pro.Sum,
+                    Tax = pro.Tax,
+                    TaxRate = pro.TaxRate,
+                    Trade = pro.Trade,
+                    UnitPrice = pro.UnitPrice
+                };
+
+                items.Add(p);
+            }
+            normalInvoice.Items = items;
             normalInvoice.Title = normalInvoice1.Title;
         }
     }
