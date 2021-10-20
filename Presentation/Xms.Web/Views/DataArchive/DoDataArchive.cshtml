@@ -1,0 +1,183 @@
+﻿@model Xms.Web.Models.DataArchiveModel
+@{
+    Layout = null;
+}
+@{
+    DialogModel dialogModel = ViewData["DialogModel"] as DialogModel;
+
+   
+}
+
+<!-- 附件（Modal） -->
+<div class="modal fade" id="attachmentModal" tabindex="-1" role="dialog"
+    aria-labelledby="attachmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                    aria-hidden="true">
+                    ×
+                </button>
+                <h4 class="modal-title" id="attachmentModalLabel">
+                    <span class="glyphicon glyphicon-cloud-upload"></span>归档
+                </h4>
+            </div>
+            <div class="modal-body">
+
+                <div class="container-fluid" style="margin-top: 10px; margin-bottom: 10px;">
+
+                    <div class="form-group col-sm-12">
+                        <label class="col-sm-4 control-label" for="description">保管期限</label>
+                        <select class="selectpicker show-tick col-sm-8" title="请选择一项" id ="storage" data-live-search="true" data-size="10">
+                            <option>10年</option>
+                            <option>30年</option>
+                            <option>永久</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group col-sm-12">
+                        <label class="col-sm-4 control-label" for="description">说明</label>
+                        <div class="col-sm-8">
+                            <textarea rows="3" cols="20" class="form-control" name="description" id="description"></textarea>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <script src="/content/js/jquery.bootpag.min.js?v=@app.PlatformSettings.VersionNumber"></script>
+            <script src="/content/js/jquery.form.js?v=@app.PlatformSettings.VersionNumber"></script>
+            <script>
+                var ArchiveModel = {
+                    dialog: $('#attachmentModal'),
+                    dialogid: '#attachmentModal',
+                    pageUrl: '@app.Url',
+                    callback: @Model.CallBack,
+                model_data: '@ViewData["model"]'.replaceAll("&quot;", "\""),
+                    disabledForm: function () {
+                        ArchiveModel.dialog.find('button').prop('disabled', true);
+                    },
+                resetForm: function () {
+                    ArchiveModel.dialog.find('button').prop('disabled', false);
+                },
+                ajaxgrid_reset: function () {
+                    ArchiveModel.pag_init();
+                    Xms.Web.DataTable($(ArchiveModel.dialogid + " #datatable"))
+                },
+                pag_init: function () {
+                    $(ArchiveModel.dialogid + ' #page-selection').bootpag({
+                        total: $(ArchiveModel.dialogid + ' #page-selection').attr('data-total')
+                        , maxVisible: 5 //最大显示分页个数
+                        , page: $(ArchiveModel.dialogid + ' #page-selection').attr('data-page')
+                        , leaps: false
+                        , prev: '&lsaquo;'
+                        , next: '&rsaquo;'
+                        , firstLastUse: true
+                        , first: '&laquo;'
+                        , last: '&raquo;'
+                    }).on("page", function (event, /* page number here */ num) {
+                        event.preventDefault();
+                        var url = $.setUrlParam(ArchiveModel.pageUrl, 'page', num);
+                        ArchiveModel.rebind(url);
+                        return false;
+                    });
+                },
+                submit: function () {
+                    debugger;
+                    var str = ArchiveModel.model_data.replaceAll("\\", "");
+                    var obj = JSON.parse(str);
+                    var s_value = $('#storage').val();
+                    var d_value = $('#description').val();
+                    obj['Storage'] = s_value;
+                    obj['description'] = d_value;
+                    var result = JSON.stringify(obj);
+                    ArchiveModel.callback(result);
+                    ArchiveModel.disabledForm();
+                    ArchiveModel.dialog.find('form').submit();
+                },
+                dialog_return: function () {
+                    ArchiveModel.dialog.modal('hide');
+                    //Xms.Web.CloseDialog('#attachmentModal');
+                },
+                rebind: function (url) {
+                    if (typeof url == 'string') url = url || ArchiveModel.pageUrl;
+                    else url = ArchiveModel.pageUrl;
+                    $(ArchiveModel.dialogid + " #gridview").ajaxLoad(url, ArchiveModel.dialogid + " #gridview", function (response) {
+                        ArchiveModel.ajaxgrid_reset();
+                    });
+                    ArchiveModel.ajaxgrid_reset();
+                }
+                };
+
+                $(function () {
+                    if (ArchiveModel.entityid == Xms.Utility.Guid.EmptyGuid.ToString() || ArchiveModel.objectid == Xms.Utility.Guid.EmptyGuid.ToString()) {
+                        Xms.Web.Alert(false, LOC_NOTSPECIFIED_RECORD);
+                        ArchiveModel.dialog_return();
+                        return;
+                    }
+                    ArchiveModel.ajaxgrid_reset();
+
+                    ArchiveModel.dialog.find('form').ajaxForm({
+                        success: function (response) {
+                            if (response.IsSuccess) {
+                                debugger;
+                                Xms.Web.Alert(true, response.Content);
+                                //AJAX 回调函数里进行触发案卷进行表格数据刷新。
+                                //console.log("TEST!!!!! from disabledForm method!");
+                                //if ($("[name='searchBtn']").length > 0) {
+                                //  console.log("searchBtn does exisit");
+                                //  $("[name='searchBtn']").click(); //trigger click event.
+                                //}
+                                //else {
+                                //    console.log("The searchBtn element does not exist!");
+                                //};
+                                //ArchiveModel.dialog_return();
+                                if ($('#loader').length > 0) {
+                                    $('#loader').children('div').text('加载数据中...');
+                                    $('#loader').children('div').css('width', 160);
+                                }
+                                ArchiveModel.callback(response.Extra.filepath, ArchiveModel);
+                                ArchiveModel.rebind();
+                                ArchiveModel.dialog.find('form').resetForm();
+                                ArchiveModel.resetForm();
+                                return;
+                            }
+                            Xms.Web.Alert(false, response.Content);
+                            ArchiveModel.resetForm();
+                        },
+                        error: function () {
+                            ArchiveModel.dialog.find('form').resetForm();
+                            ArchiveModel.resetForm();
+                            setTimeout(function () {
+                                if ($('.jq-toast-wrap').length > 0) {
+                                    $('.jq-toast-wrap').remove();
+                                }
+                            }, 2000);
+                            return;
+                        }
+                    });
+                    $(ArchiveModel.dialogid + " #datatable").ajaxTable();
+                    ArchiveModel.dialog.modal({
+                        backdrop: 'static'
+                    })
+                    ArchiveModel.dialog.on('hidden.bs.modal', function () {
+                        Xms.Web.CloseDialog(ArchiveModel.dialogid);
+                    });
+                    //$('#myTab').find('li').click(function(){
+                    //    ArchiveModel.ajaxgrid_reset();
+                    //})
+                });
+            </script>
+
+            <div class="modal-footer">
+                <div class="form-group">
+                    <div class="col-sm-offset-3">
+                        <button type="button" class="btn btn-primary" onclick="ArchiveModel.submit()"><span class="glyphicon glyphicon-saved"></span>@app.T["save"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
