@@ -314,7 +314,8 @@
                     if(_form.Events != null){
                         $(_form.Events).each(function(i, n){
                             var event = n;
-                            if(event.Name == 'onload'){
+                            if (event.Name == 'onload') {
+                                debugger;
                                 console.log(event.JsAction);
                                 try{
                                     var func = getFunction(event.JsAction);
