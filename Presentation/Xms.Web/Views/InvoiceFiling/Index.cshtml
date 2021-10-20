@@ -140,10 +140,10 @@
     <ul id="myTab" class="nav nav-tabs" role="tablist">
         <li class="active">
             <a href="javascript:;">
-                已归档
+                未归档
             </a>
         </li>
-        <li><a href="javascript:;">未归档</a></li>
+        <li><a href="javascript:;">已归档</a></li>
     </ul>
     <div id="kanbanview" class="hide"></div>
     <div id="xms-gridview-section" class="xms-gridview-section  ">
@@ -310,7 +310,7 @@
                 var index = $(this).index();
                 $(this).siblings('li').removeClass('active').end().addClass('active');
                 $('#myTabContent').children().eq(index).addClass('active').siblings().removeClass('active');
-                if (index==0)
+                if (index==1)
                     Xms.Page.PageContext.ReImbursmentFlag = "归档";
                 else
                     Xms.Page.PageContext.ReImbursmentFlag = "";
