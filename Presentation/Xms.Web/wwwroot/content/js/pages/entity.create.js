@@ -759,6 +759,7 @@
             $(".upload-file-input").imgShow();
         }
         , loadSubGrid: function () {
+            debugger;
             //如果页面所有单据体都不需要异步加载
             if (isSyncLoadSubGrid == false) {
                 var subGridDom = $('.subgrid');
@@ -768,12 +769,13 @@
                         var $this = $(n);
                         var $parent = $this.parent();
                         $this.appendTo($('body'));
+                        debugger;
                         renderGridView($this, function (obj) {
                             SetFormStateStep++;
                             var par = obj.parents('.subgrid');
                             $parent.append($this);
                             if (SetFormStateStep == syncCount) {
-                                Xms.Page.SetFormState(Xms.Page.Form.State);
+                                //Xms.Page.SetFormState(Xms.Page.Form.State);
                                 if (typeof services !== "undefined") {
                                     getEvents(services.getEvents);
                                 }

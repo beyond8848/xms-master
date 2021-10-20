@@ -230,10 +230,10 @@ namespace Xms.File
                                 //};
                             }
                             string serviceName;
-                            if (@in.Items.Count != 0)
-                                serviceName = @in.Items[0].Trade;
-                            else
+                            if (@in.Items == null || @in.Items.Count == 0)
                                 serviceName = "";
+                            else
+                                serviceName = @in.Items[0].Trade;
                             Entity ent2 = new Entity("ReimbursedDetail")
                             .SetIdValue(id)
                             //地点 not null
@@ -278,8 +278,8 @@ namespace Xms.File
                             .SetAttributeValue("InvoiceDM", @in.InvoiceID)
                             .SetAttributeValue("ArchiveNo", "")
                             .SetAttributeValue("ServiceName",serviceName)
-                            .SetAttributeValue("Seller", @in.Seller.Name)
-                            .SetAttributeValue("Buyer", @in.Buyer.Name);
+                            .SetAttributeValue("Seller", @in.Seller!=null? @in.Seller.Name:"")
+                            .SetAttributeValue("Buyer", @in.Buyer!=null? @in.Buyer.Name:"");
                             reimbursedDetails.Add(ent2);
                         }
                         //if(this.VerifyInvoiceNoExisits(ni.InvoiceNo))

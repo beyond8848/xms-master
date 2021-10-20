@@ -11,18 +11,22 @@ using Xms.Sdk.Client;
 using Xms.Core.Data;
 using Xms.Web.Framework.Mvc;
 using Xms.Logging.AppLog;
+using Xms.Web.Models;
+using Xms.File;
+using System.Xml;
+using System.IO.Compression;
 
 namespace Xms.Web.Api
 {
 
-    [Route("{org}/api/data/DoDataArchive")]
-    public class DataArchiveController :  ApiControllerBase
+    [Route("{org}/api/data/{action}")]
+    public class DataArchiveController : ApiControllerBase
     {
         private readonly IDataFinder _dataFinder;
         private readonly IDataUpdater _dataUpdater;
         private readonly ILogService _logService;
 
-        private readonly string ASIPFolderPoolDir = System.AppDomain.CurrentDomain.BaseDirectory+"ASIP_POOL_FILES";
+        private readonly string ASIPFolderPoolDir = System.AppDomain.CurrentDomain.BaseDirectory + "ASIP_POOL_FILES";
         public DataArchiveController(IWebAppContext appContext
             , IDataFinder dataFinder
             , IDataUpdater dataUpdater
@@ -37,10 +41,16 @@ namespace Xms.Web.Api
 
         [Description("预归档")]
         [HttpPost]
-        public IActionResult DoDataArchive(string[] reimbursmentIds)
+        public IActionResult DoDataArchive(DataArchiveModel model)
         {
+            
+            //DataArchiveModel model = Newtonsoft.Json.JsonConvert.DeserializeObject<DataArchiveModel>(jmodel);
             bool processSussess = false;
-            foreach(var id in reimbursmentIds)
+            string[] reimbursmentIds = model.ReimbursmentIds;
+            Dictionary<string, string> d = new Dictionary<string, string>();
+            d.Add("Storage", model.Storage);
+            d.Add("Remark", model.Description);
+            foreach (var id in reimbursmentIds)
             {
                 try
                 {
@@ -52,23 +62,34 @@ namespace Xms.Web.Api
                         if (!string.IsNullOrWhiteSpace(claimNo))
                         {
                             string file = ASIPFolderPoolDir + "\\" + claimNo + ".zzip";
-                            string destFile = ASIPFolderPoolDir + "\\" + claimNo + ".zip";
+
                             if (System.IO.File.Exists(file))
                             {
-                                System.IO.File.Move(file, destFile);
+                                string file_temp_path = ASIPFolderPoolDir + "\\" + claimNo;
+                                if (!System.IO.Directory.Exists(file_temp_path))
+                                    System.IO.Directory.CreateDirectory(file_temp_path);
+                                string destFile = ASIPFolderPoolDir + "\\" + claimNo + ".zip";
+                                //System.IO.File.Move(file, destFile);
+                                //}
+                                //解压压缩包
+                                ZipArchiveHelper.UnZip(file, file_temp_path);
+                                XmlSerializeHelper.AddPointer(file_temp_path + "\\案卷说明.xml", "ArchiveItemInstance", d);
+                                ZipArchiveHelper.CreatZip(_logService, file_temp_path, destFile, CompressionLevel.Fastest);
+                                ZipArchiveHelper.DeleteFolder(file_temp_path);
                                 Core.Data.Entity updateEntity = new Core.Data.Entity("Reimbursement");
                                 updateEntity.SetAttributeValue("IsArchived", 1);
                                 updateEntity.SetIdValue(reimbursmentId);
                                 _dataUpdater.Update(updateEntity);
                             }
+                            processSussess = true;
                         }
                     }
-                }catch(Exception ex)
+                }
+                catch (Exception ex)
                 {
                     _logService.Error(ex);
                 }
             }
-
             return processSussess.UpdateResult(T);
         }
     }

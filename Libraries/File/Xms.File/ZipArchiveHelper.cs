@@ -121,7 +121,7 @@ namespace Xms.File
         /// </summary>
         /// <param name="baseDirectory"></param>
         /// <returns></returns>
-        private static bool DeleteFolder(string baseDirectory)
+        public static bool DeleteFolder(string baseDirectory)
         {
             var successed = true;
             try

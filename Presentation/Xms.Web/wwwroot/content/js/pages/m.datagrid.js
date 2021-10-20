@@ -499,6 +499,17 @@
             }
             Xms.Web.OpenDialog('/file/AttachmentsDialog?entityid=CFE7EF4C-B87E-4E46-850D-F8E11FAD5F6C&objectid=' + id+'&Flag=View');
         });
+        $('#openFilesBtnID', self.$parent).off('click').on('click', null, function (e) {
+            window.alert('test');
+            var parRow = $(this).parents('tr:first'), index = parRow.index();
+            var rowData = self.$plug.cDatagrid('getRowData', index - 1);
+            var id = parRow.find('input[name="recordid"]:first').val();
+            if (!id || id == '') {
+                window.alert('请先上传电子发票!');
+                return;
+            }
+            Xms.Web.OpenDialog('/file/AttachmentsDialog?entityid=CFE7EF4C-B87E-4E46-850D-F8E11FAD5F6C&objectid=' + id + '&Flag=View');
+        });
 
     }
     function filterAttributes(items, datas) {
@@ -523,6 +534,7 @@
                             n.editable = false;
                             if (datas.formState == 'disabled' || datas.formState == 'readonly') {
                                 n.editable = false;
+                                //n.editable = true;
                             }
                             if (datas.iseditable == "false") {
                                 n.editable = false;
@@ -573,7 +585,8 @@
             layoutconfigObj = JSON.parse(datas.layoutconfig);
         }
         if (layoutconfigObj) {
-            //判断宽度是否需要自适应
+            debugger;
+            //判断宽度是否需要自适应0
             var layoutitems = layoutconfigObj.rows[0].cells;
             var datatableW = $context.width();
             var columnNumW = 30;//序号列宽
@@ -582,10 +595,12 @@
             $.each(layoutitems, function (i, n) {
                 tableW += ((n.width || 100) * 1);
             });
+            //tableW += 60;
             //  console.log(datatableW, tableW);
             if (datatableW < tableW) {
                 isWidthToMax = false;
             }
+           
         }
         //  var firstload = false;
         //datagrid配置项
@@ -612,9 +627,10 @@
                 _super.$wrap.trigger('gridview.rowClick', { e: event, $tr: $tr, ui: ui });
             },
             gridrefreshed: function ($grid, self, obj, e) {
-                console.log($grid, self, obj, e)
+                //console.log($grid, self, obj, e)
                 _super.$wrap.trigger('gridview.refreshed', { grid: $grid, that: self, obj: obj, e: e });
             },
+            //isWidthToMax = true;
             //  addCheckbox:false,
             checkName: 'recordid',
             headerFilter: true,
@@ -625,7 +641,7 @@
                 return items;
             },
             columnFilter: function (items) {
-                //debugger;
+                debugger;
                 items[0].align = 'center';
                 var delCol = {
                     title: " ", dataIndx: 'cdatagrid_editer', edittype: 'cdatagrid_editer', editable: false, minWidth: 40, width: 40, maxWidth: 40, notHeaderFilter: true, sortable: false, render: function (ui) {
@@ -640,7 +656,7 @@
                         }
                     }
                 };
-                //console.log(datas);
+                console.log(datas);
                 if (datas.formState == 'disabled' || datas.formState == 'readonly') {
                     delCol.hidden = true;
                 }
@@ -648,34 +664,46 @@
                     delCol.hidden = true;
                 }
                 items.splice(1, 0, delCol);
-                if (datas.iseditable == "false") {
+                if (datas.iseditable == "false")
+                {
                     items.unshift();
                 }
                 //增加添加附件列
                 var addInvoiceAttachCol = {
-                    title: " ", dataIndx: 'cdatagrid_editer', edittype: 'cdatagrid_editer', editable: false, minWidth: 60, width: 80, maxWidth: 80, notHeaderFilter: true, sortable: false, render: function (ui) {
-                        var datas = ui.rowData;
+                    title: " ", dataIndx: 'cdatagrid_editer', edittype: 'cdatagrid_editer', editable: false, minWidth: 40, width: 60, maxWidth: 60, notHeaderFilter: true, sortable: false, render: function (ui) {
+                        var rData = ui.rowData;
                         var dataIndx = ui.dataIndx;
                         var column = ui.column;
-                        var recordid = datas[dataIndx];
+                        var recordid = rData[dataIndx];
                         if (recordid == 'new') {
                             return '<button type="button" class="btn btn-link btn-xs" name="attachFileUploadBtnLocal"><span class="glyphicon glyphicon-cloud-upload"></span></button><button type="button" class="btn btn-link btn-xs" name="openFilesBtnLocal"><span class="glyphicon glyphicon-file"></span></button>';
                         } else {
-                            return '<button type="button" class="btn btn-link btn-xs" name="attachFileUploadBtn"><span class="glyphicon glyphicon-cloud-upload"></span></button><button type="button" class="btn btn-link btn-xs" name="openFilesBtn"><span class="glyphicon glyphicon-file"></span></button>';
+                            if (datas.formState == 'disabled' || datas.formState == 'readonly') {
+                                return '<button type="button"  class="btn btn-link btn-xs" id="openFilesBtnIDName" name="openFilesBtn"><span class="glyphicon glyphicon-file"></span></button>';
+                            }
+                            else {
+                                return '<button type="button" class="btn btn-link btn-xs" name="attachFileUploadBtn"><span class="glyphicon glyphicon-cloud-upload"></span></button><button type="button" class="btn btn-link btn-xs" name="openFilesBtn"><span class="glyphicon glyphicon-file"></span></button>';
+                            }
                         }
                     }
                 };
                 //console.log(datas);
                 if (datas.formState == 'disabled' || datas.formState == 'readonly') {
-                    addInvoiceAttachCol.hidden = true;
+                    //items[items.length - 1].hidden = true;
+                    //addInvoiceAttachCol.hidden = true;
+                    addInvoiceAttachCol.width = 40;
                 }
-                if (datas.iseditable == 'false') {
-                    addInvoiceAttachCol.hidden = true;
+                //if (datas.iseditable == 'false')
+                {
+                    //addInvoiceAttachCol.hidden = true;
                 }
-                items.splice(items.length, 0, addInvoiceAttachCol);
-                if (datas.iseditable == "false") {
+                items.splice(items.length-1, 0, addInvoiceAttachCol);
+                //if (datas.iseditable == "false")
+                {
                     items.unshift();
                 }
+                
+                 
                 //行事件绑定
                 var rowsCommons = layoutconfigObj.rowcommand;
                 // console.log(rowsCommons)
@@ -816,7 +844,7 @@
                     //从服务端返回的数据.
                     console.log(dataJSON)
                     _super.localDatas = data;
-                    if (data != null && data.length > 0 && Xms.Page.PageContext.EntityName == "Reimbursement") {
+                    if (((datas.formState != 'disabled' && datas.formState != 'readonly'))&&data != null && data.length > 0 && Xms.Page.PageContext.EntityName == "Reimbursement") {
                         var sumMoneyMount = 0;
                         for (var i = 0; i < data.length; i++) {
                             var moneyAmount = data[i].moneyamount;
@@ -1097,6 +1125,7 @@
                 layoutconfigObj = JSON.parse(datas.layoutconfig);
             }
             if (layoutconfigObj) {
+                debugger;
                 //判断宽度是否需要自适应
                 var layoutitems = layoutconfigObj.rows[0].cells;
                 var datatableW = $context.width();

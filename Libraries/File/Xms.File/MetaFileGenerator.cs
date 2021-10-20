@@ -26,7 +26,8 @@ namespace Xms.File
         private readonly IAppContext _appContext;
         private readonly IDataFinder _dataFinder;
         private readonly ILogService _logService;
-        
+        private readonly IWebHelper _webHelper;
+
 
         public string mainEntityName = "Reimbursement";
         public string subEntityName = "ReimbursedDetail";
@@ -63,11 +64,12 @@ namespace Xms.File
         /// </summary>
         public string ASIPFILEPOOLPath = System.AppDomain.CurrentDomain.BaseDirectory + @"ASIP_POOL_FILES";
 
-        public MetaFileGenerator(IAppContext appContext, IDataFinder dataFinder,ILogService logService) :base(appContext)
+        public MetaFileGenerator(IAppContext appContext, IDataFinder dataFinder,ILogService logService, IWebHelper webHelper) :base(appContext)
         {
             _appContext = appContext;
             _dataFinder = dataFinder;
             _logService = logService;
+            _webHelper =  webHelper;
         }
 
 
@@ -404,7 +406,9 @@ namespace Xms.File
                             ArchiveNo = subEntity.GetStringValueExtension("ArchiveNo"),
                             FilePath = subEntity.GetStringValueExtension("AssociatedFilePath")
                         };
-                        this.CreateSingleFileMetaXML(fileMetaItem, GetFileNameBasedNameRule("", orderNo));
+                        string orderName = GetFileNameBasedNameRule("", orderNo);
+                        this.CreateSingleFileMetaXML(fileMetaItem, orderName);
+                        MoveInvoiceAttachedFiles(subEntity.Id, orderName);
                         //fileMetaItems.Add(fileMetaItem);
                     }
                     //this.CreateFileMetaXML(fileMetaItems);
@@ -416,6 +420,37 @@ namespace Xms.File
                 { };
             }
             return strArchiveNo;
+        }
+
+        public void MoveInvoiceAttachedFiles(Guid subEntityId,string folderName)
+        {
+            var query = new QueryExpression("ReimbursmentDetailAttach", _appContext.GetFeature<ICurrentUser>().UserSettings.LanguageId);
+            query.ColumnSet.AllColumns = true;
+            query.Criteria.AddCondition("ReimbursmentDetailID", ConditionOperator.Equal, subEntityId);
+            List<Entity> subEntities = _dataFinder.RetrieveAll(query);
+
+            string folderPath = tempArchiveFolderPath + "\\Attachments\\" + folderName;
+            if(!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
+            string fileName = string.Empty;
+            string filePath = string.Empty;
+
+            if (subEntities!=null && subEntities.Count>0)
+            {
+                foreach(var subEntity in subEntities)
+                {
+                    fileName = subEntity.GetStringValueExtension("Name");
+                    filePath = _webHelper.MapPath(subEntity.GetStringValueExtension("CDNPath"));
+                    if(System.IO.File.Exists(filePath))
+                    {
+                        System.IO.File.Move(filePath, folderPath + "\\" + fileName);
+                    }
+                }
+            }
+
         }
 
         /// <summary>
