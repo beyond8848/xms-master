@@ -871,6 +871,9 @@
             isSingle: true,
             getDataUrl: function (cdatagrid, opts) {
                 debugger;
+                if (Xms.Page.PageContext.ReImbursmentFlag == "归档") {
+                    return ORG_SERVERURL + '/api/data/fetchAndAggregate?entityid=' + datas.entityId + '&queryviewid=' + datas.queryId + '&onlydata=true&pagesize=' + cdatagrid.opts.pageModel.rPP + '&page=' + cdatagrid.opts.pageModel.page + '&IsArchived=true&ReImbursmentFlag=true'
+                }
                 if (window.location.href.indexOf('IsArchived') > 0) {
                     return ORG_SERVERURL + '/api/data/fetchAndAggregate?entityid=' + datas.entityId + '&queryviewid=' + datas.queryId + '&onlydata=true&pagesize=' + cdatagrid.opts.pageModel.rPP + '&page=' + cdatagrid.opts.pageModel.page+'&IsArchived=true'
                 }

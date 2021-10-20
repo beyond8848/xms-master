@@ -55,6 +55,7 @@ namespace Xms.Web.Models
         public Guid? ReferencedRecordId { get; set; }
 
         public string isarchived { get; set; }
+        public string reimbursmentflag { get; set; }
     }
 
     public class EntityGridModel : DataListModel
