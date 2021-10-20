@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Xms.Authorization.Abstractions;
 using Xms.Context;
 using Xms.Core;
 using Xms.Core.Context;
@@ -30,6 +31,7 @@ namespace Xms.Sdk.Data
         private readonly IAttributeFinder _attributeFinder;
         private readonly IQueryMetadataFinder _queryMetadataFinder;
         private readonly DataRepositoryBase<dynamic> _repository;
+        private readonly IRoleObjectAccessEntityPermissionService _roleObjectAccessEntityPermissionService;
         private readonly IDbContext _dbContext;
 
         #region fields
@@ -136,13 +138,15 @@ namespace Xms.Sdk.Data
         public QueryExpressionResolver(IAppContext appContext
             , IDbContext dbContext
             , IQueryMetadataFinder queryMetadataFinder
-            , IAttributeFinder attributeFinder)
+            , IAttributeFinder attributeFinder
+            , IRoleObjectAccessEntityPermissionService roleObjectAccessEntityPermissionService)
         {
             User = appContext.GetFeature<ICurrentUser>();
             _dbContext = dbContext;
             _repository = new DataRepositoryBase<dynamic>(_dbContext);
             _queryMetadataFinder = queryMetadataFinder;
             _attributeFinder = attributeFinder;
+            _roleObjectAccessEntityPermissionService = roleObjectAccessEntityPermissionService;
         }
 
         public IQueryResolver Init(QueryBase query)
@@ -339,7 +343,12 @@ namespace Xms.Sdk.Data
             {
                 if (User.RoleObjectAccessEntityPermission.IsEmpty())
                 {
-                    throw new XmsUnauthorizedException("没有 '" + MainEntity.LocalizedName + "' 读取权限");
+                    List<Guid> entIds = new List<Guid>();
+                    entIds.Add(MainEntity.EntityId);
+                    var roles = User?.Roles?.Select(r => r.RoleId);
+                    User.RoleObjectAccessEntityPermission =_roleObjectAccessEntityPermissionService.GetPermissions(entIds, roles, AccessRightValue.Read);
+                    if(User.RoleObjectAccessEntityPermission.IsEmpty())
+                        throw new XmsUnauthorizedException("没有 '" + MainEntity.LocalizedName + "' 读取权限");
                 }
                 var a = User.RoleObjectAccessEntityPermission.Where(n => n.EntityId == MainEntity.EntityId).OrderByDescending(n => n.AccessRightsMask).ToList();
                 var prv = a.NotEmpty() ? a.First() : null;

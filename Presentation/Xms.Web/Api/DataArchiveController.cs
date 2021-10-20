@@ -81,6 +81,7 @@ namespace Xms.Web.Api
                                 updateEntity.SetIdValue(reimbursmentId);
                                 _dataUpdater.Update(updateEntity);
                             }
+                            processSussess = true;
                         }
                     }
                 }

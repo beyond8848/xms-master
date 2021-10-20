@@ -28,6 +28,11 @@ namespace Xms.File
             return _dataFinder.RetrieveById(EntityName, id);
         }
 
+        public virtual Entity FindReimbursmentAttachById(Guid id)
+        {
+            return _dataFinder.RetrieveById("ReimbursmentDetailAttach", id);
+        }
+
         public virtual PagedList<Entity> QueryPagedFromReimbursementDetailAttach(int page, int pageSize, Guid reimbursmentDetailId)
         {
             var query = new QueryExpression("ReimbursmentDetailAttach", _appContext.GetFeature<ICurrentUser>().UserSettings.LanguageId);

@@ -93,14 +93,22 @@ namespace Xms.Web.Controllers
                 ModelState.AddModelError("newpassword", T["user_password_notequal"]);
             }
             var user = _userService.FindById(CurrentUser.SystemUserId);
-            string password = SecurityHelper.MD5(model.OriginalPassword + user.Salt);
+            string password = string.Empty;
+            if (!string.IsNullOrWhiteSpace(user.Salt))
+                password = SecurityHelper.MD5(model.OriginalPassword + user.Salt);
+            else
+                password = model.OriginalPassword;
             if (!password.IsCaseInsensitiveEqual(user.Password))
             {
                 ModelState.AddModelError("OriginalPassword", T["user_originalpassword_invalid"]);
             }
             if (ModelState.IsValid)
             {
-                string newPassword = SecurityHelper.MD5(model.NewPassword + user.Salt);
+                string newPassword = string.Empty;
+                if (!string.IsNullOrWhiteSpace(user.Salt))
+                    newPassword = SecurityHelper.MD5(model.NewPassword + user.Salt);
+                else
+                    newPassword = model.NewPassword;
                 bool result = _userService.Update(x => x
                     .Set(n => n.Password, newPassword)
                     .Where(n => n.SystemUserId == CurrentUser.SystemUserId)
