@@ -94,12 +94,14 @@
                     obj['description'] = d_value;
                     var result = JSON.stringify(obj);
                     ArchiveModel.callback(result);
-                    ArchiveModel.disabledForm();
+                    //ArchiveModel.disabledForm();
                     ArchiveModel.dialog.find('form').submit();
+                    ArchiveModel.dialog_return();
                 },
-                dialog_return: function () {
+                    dialog_return: function () {
+                        debugger;
                     ArchiveModel.dialog.modal('hide');
-                    //Xms.Web.CloseDialog('#attachmentModal');
+                    Xms.Web.CloseDialog('#attachmentModal');
                 },
                 rebind: function (url) {
                     if (typeof url == 'string') url = url || ArchiveModel.pageUrl;
