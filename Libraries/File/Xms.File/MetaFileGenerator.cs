@@ -422,6 +422,37 @@ namespace Xms.File
             return strArchiveNo;
         }
 
+        public void GetRemittanceReceiptAttachFiles(Guid reImbursmentId,string tempUnzipFolder)
+        {
+            var query = new QueryExpression("Attachment", _appContext.GetFeature<ICurrentUser>().UserSettings.LanguageId);
+            query.ColumnSet.AllColumns = true;
+            query.Criteria.AddCondition("ObjectId", ConditionOperator.Equal, reImbursmentId);
+            query.Criteria.AddCondition("AttachType", ConditionOperator.Equal, "银行转汇单");
+            List<Entity> subEntities = _dataFinder.RetrieveAll(query);
+
+            string folderPath = tempUnzipFolder + "\\Remittance\\";
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
+            string fileName = string.Empty;
+            string filePath = string.Empty;
+
+            if (subEntities != null && subEntities.Count > 0)
+            {
+                foreach (var subEntity in subEntities)
+                {
+                    fileName = subEntity.GetStringValueExtension("Name");
+                    filePath = _webHelper.MapPath(subEntity.GetStringValueExtension("CDNPath"));
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        System.IO.File.Copy(filePath, folderPath + "\\" + fileName,true);
+                    }
+                }
+            }
+        }
+
         public void MoveInvoiceAttachedFiles(Guid subEntityId,string folderName)
         {
             var query = new QueryExpression("ReimbursmentDetailAttach", _appContext.GetFeature<ICurrentUser>().UserSettings.LanguageId);
@@ -446,7 +477,7 @@ namespace Xms.File
                     filePath = _webHelper.MapPath(subEntity.GetStringValueExtension("CDNPath"));
                     if(System.IO.File.Exists(filePath))
                     {
-                        System.IO.File.Move(filePath, folderPath + "\\" + fileName);
+                        System.IO.File.Copy(filePath, folderPath + "\\" + fileName,true);
                     }
                 }
             }

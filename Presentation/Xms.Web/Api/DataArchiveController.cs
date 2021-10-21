@@ -25,18 +25,21 @@ namespace Xms.Web.Api
         private readonly IDataFinder _dataFinder;
         private readonly IDataUpdater _dataUpdater;
         private readonly ILogService _logService;
+        private readonly IMetaFileGenerator _metaFileGenerator;
 
         private readonly string ASIPFolderPoolDir = System.AppDomain.CurrentDomain.BaseDirectory + "ASIP_POOL_FILES";
         public DataArchiveController(IWebAppContext appContext
             , IDataFinder dataFinder
             , IDataUpdater dataUpdater
             , ILogService logService
+            , IMetaFileGenerator metaFileGenerator
              )
             : base(appContext)
         {
             _dataFinder = dataFinder;
             _dataUpdater = dataUpdater;
             _logService = logService;
+            _metaFileGenerator = metaFileGenerator;
         }
 
         [Description("预归档")]
@@ -74,12 +77,13 @@ namespace Xms.Web.Api
                                 //解压压缩包
                                 ZipArchiveHelper.UnZip(file, file_temp_path);
                                 XmlSerializeHelper.AddPointer(file_temp_path + "\\案卷说明.xml", "ArchiveItemInstance", d);
+                                _metaFileGenerator.GetRemittanceReceiptAttachFiles(reimbursmentId, file_temp_path);
                                 ZipArchiveHelper.CreatZip(_logService, file_temp_path, destFile, CompressionLevel.Fastest);
                                 ZipArchiveHelper.DeleteFolder(file_temp_path);
                                 Core.Data.Entity updateEntity = new Core.Data.Entity("Reimbursement");
                                 updateEntity.SetAttributeValue("IsArchived", 1);
                                 updateEntity.SetIdValue(reimbursmentId);
-                                _dataUpdater.Update(updateEntity);
+                                _dataUpdater.Update(updateEntity,true);
                             }
                             processSussess = true;
                         }

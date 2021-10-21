@@ -12,5 +12,7 @@ namespace Xms.File
         string GenerateFileXML(Guid entityId, List<WorkFlowProcess> workFlowProcesses,out ArchiveInstructions archiveInstructions);
 
         void CreateWorkFlowPDF(List<WorkFlowProcess> workFlowProcesses);
+
+        void GetRemittanceReceiptAttachFiles(Guid reImbursmentId, string tempUnzipFolder);
     }
 }
